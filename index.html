@@ -178,7 +178,7 @@
     gap:22px;
     margin-bottom:38px;
     opacity:0;
-    animation:rise .8s ease .24s forwards;
+    animation:rise .8s ease .08s forwards;
   }
   .avatar-frame{
     position:relative;
@@ -550,7 +550,7 @@
 
 <div class="topbar" id="topbar">
   <div class="topbar-inner">
-    <div class="topbar-brand">emloxa<span class="dot">.</span>dev</div>
+    <div class="topbar-brand">emloxa</div>
     <div class="topbar-links">
       <a href="#about">About</a>
       <a href="#stack">Stack</a>
@@ -567,8 +567,6 @@
 <main class="wrap">
 
   <section class="hero" id="top">
-    <div class="boot-line"><span class="led"></span>system initialized · identity verified · access: full</div>
-
     <div class="hero-top">
       <div class="avatar-frame">
         <img class="avatar" src="https://cdn.discordapp.com/avatars/627878511239233556/a_626a769de49372e79b0dfb0a475ce43e.webp?size=240" alt="Emloxa" loading="eager">
@@ -690,7 +688,7 @@
 
   <footer>
     <div class="footer-inner">
-      <div class="footer-brand">emloxa<span>.</span>dev · 2026</div>
+      <div class="footer-brand">emloxa · 2026</div>
       <div class="footer-status"><span class="led"></span>online</div>
     </div>
   </footer>
@@ -893,30 +891,56 @@
     topbar.classList.toggle('visible', window.scrollY > window.innerHeight * 0.6);
   }, { passive:true });
 
-  /* ---------- background audio ---------- */
+  /* ---------- background audio (autoplay, user can mute) ---------- */
   const bgm = document.getElementById('bgm');
   const soundBtn = document.getElementById('sound-toggle');
   let audioFailed = false;
+  let userMuted = false;
 
   bgm.addEventListener('error', () => {
     audioFailed = true;
     soundBtn.style.display = 'none';
   });
 
+  function setPlayingUI(isPlaying){
+    soundBtn.classList.toggle('playing', isPlaying);
+    soundBtn.setAttribute('aria-pressed', String(isPlaying));
+  }
+
+  function tryAutoplay(){
+    if (audioFailed || userMuted) return;
+    bgm.volume = 0.32;
+    bgm.play().then(() => setPlayingUI(true)).catch(() => {
+      // browser blocked autoplay — start on first user interaction instead
+      const resume = () => {
+        if (audioFailed || userMuted) return;
+        bgm.play().then(() => setPlayingUI(true)).catch(() => {});
+        window.removeEventListener('pointerdown', resume);
+        window.removeEventListener('keydown', resume);
+        window.removeEventListener('touchstart', resume);
+        window.removeEventListener('wheel', resume);
+      };
+      window.addEventListener('pointerdown', resume, { once:true });
+      window.addEventListener('keydown', resume, { once:true });
+      window.addEventListener('touchstart', resume, { once:true });
+      window.addEventListener('wheel', resume, { once:true });
+    });
+  }
+
   soundBtn.addEventListener('click', () => {
     if (audioFailed) return;
     if (bgm.paused){
+      userMuted = false;
       bgm.volume = 0.32;
-      bgm.play().then(() => {
-        soundBtn.classList.add('playing');
-        soundBtn.setAttribute('aria-pressed','true');
-      }).catch(() => {});
+      bgm.play().then(() => setPlayingUI(true)).catch(() => {});
     } else {
+      userMuted = true;
       bgm.pause();
-      soundBtn.classList.remove('playing');
-      soundBtn.setAttribute('aria-pressed','false');
+      setPlayingUI(false);
     }
   });
+
+  tryAutoplay();
 
   /* ---------- smooth in-page nav ---------- */
   document.querySelectorAll('a[href^="#"]').forEach(a => {
