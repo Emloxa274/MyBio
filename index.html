@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emloxa — Software Engineer &amp; Reverse Engineer</title>
+<meta name="description" content="Emloxa — software engineer, reverse engineer, systems architecture enthusiast.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#050608;
+    --bg-raise:#0c0e12;
+    --surface:#111319;
+    --line:#212530;
+    --line-soft:#171a21;
+    --text:#eceef2;
+    --text-dim:#8c92a3;
+    --text-faint:#4d5261;
+    --accent:#7c9bff;
+    --accent-2:#b98dff;
+    --accent-glow:rgba(124,155,255,0.35);
+    --mono:'IBM Plex Mono', monospace;
+    --sans:'Inter', sans-serif;
+    --serif:'Cormorant Garamond', serif;
+    --maxw:780px;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{background:var(--bg);scroll-behavior:smooth;}
+
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  #bg-canvas{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    z-index:0;
+    display:block;
+  }
+
+  .grain{
+    position:fixed;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+    opacity:0.035;
+    mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .vignette{
+    position:fixed;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+    background:radial-gradient(ellipse at 50% 30%, transparent 30%, rgba(5,6,8,0.55) 85%, var(--bg) 100%);
+  }
+
+  ::selection{background:var(--accent-glow);color:#fff;}
+  a{color:inherit;}
+
+  .wrap{
+    max-width:var(--maxw);
+    margin:0 auto;
+    padding:0 28px;
+    position:relative;
+    z-index:2;
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:fixed;
+    top:0;left:0;right:0;
+    z-index:50;
+    background:rgba(5,6,8,0.55);
+    backdrop-filter:blur(14px) saturate(140%);
+    -webkit-backdrop-filter:blur(14px) saturate(140%);
+    border-bottom:1px solid var(--line-soft);
+    opacity:0;
+    transform:translateY(-100%);
+    transition:opacity .5s ease, transform .5s ease;
+  }
+  .topbar.visible{opacity:1;transform:translateY(0);}
+  .topbar-inner{
+    max-width:var(--maxw);
+    margin:0 auto;
+    padding:15px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-family:var(--mono);
+    font-size:12.5px;
+  }
+  .topbar-brand{color:var(--text);font-weight:500;letter-spacing:.03em;}
+  .topbar-brand .dot{color:var(--accent);}
+  .topbar-links{display:flex;gap:24px;color:var(--text-dim);}
+  .topbar-links a{text-decoration:none;transition:color .25s;}
+  .topbar-links a:hover{color:var(--accent);}
+
+  /* ---------- sound toggle ---------- */
+  .sound-toggle{
+    position:fixed;
+    bottom:26px;
+    right:26px;
+    z-index:60;
+    width:48px;height:48px;
+    border-radius:50%;
+    background:rgba(17,19,25,0.75);
+    backdrop-filter:blur(8px);
+    border:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition:border-color .25s, transform .25s, box-shadow .25s;
+    opacity:0;
+    animation:fadeIn .7s ease 1.6s forwards;
+  }
+  .sound-toggle:hover{border-color:var(--accent);transform:scale(1.06);box-shadow:0 0 22px var(--accent-glow);}
+  .sound-toggle .bars{display:flex;align-items:center;gap:2.5px;height:15px;}
+  .sound-toggle .bars span{
+    display:block;width:2.5px;background:var(--text-dim);
+    border-radius:1px;
+    height:4px;
+    transition:background .25s;
+  }
+  .sound-toggle.playing .bars span{background:var(--accent);animation:eq 0.9s ease-in-out infinite;}
+  .sound-toggle.playing .bars span:nth-child(1){animation-delay:0s;}
+  .sound-toggle.playing .bars span:nth-child(2){animation-delay:.2s;}
+  .sound-toggle.playing .bars span:nth-child(3){animation-delay:.4s;}
+  @keyframes eq{0%,100%{height:4px;}50%{height:15px;}}
+  @keyframes fadeIn{to{opacity:1;}}
+
+  /* ---------- hero with 3D type ---------- */
+  .hero{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding-top:120px;
+    padding-bottom:80px;
+    position:relative;
+    perspective:1400px;
+  }
+
+  .boot-line{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--text-faint);
+    margin-bottom:30px;
+    opacity:0;
+    animation:rise .7s ease .1s forwards;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    letter-spacing:.02em;
+  }
+  .boot-line .led{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 0 10px var(--accent);
+    flex-shrink:0;
+  }
+
+  .hero-top{
+    display:flex;
+    align-items:center;
+    gap:22px;
+    margin-bottom:38px;
+    opacity:0;
+    animation:rise .8s ease .24s forwards;
+  }
+  .avatar-frame{
+    position:relative;
+    width:68px;height:68px;
+    flex-shrink:0;
+  }
+  .avatar-frame::before{
+    content:'';
+    position:absolute;
+    inset:-6px;
+    border-radius:18px;
+    background:conic-gradient(from 0deg, var(--accent), var(--accent-2), var(--accent));
+    opacity:0.5;
+    filter:blur(8px);
+    animation:spin 8s linear infinite;
+  }
+  .avatar{
+    position:relative;
+    width:68px;height:68px;
+    border-radius:15px;
+    border:1px solid rgba(255,255,255,0.12);
+    object-fit:cover;
+    display:block;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .hero-name-block .name{
+    font-size:14.5px;
+    font-family:var(--mono);
+    color:var(--text-dim);
+    letter-spacing:.03em;
+  }
+  .hero-name-block .name span{color:var(--text);}
+
+  .hero-3d{
+    transform-style:preserve-3d;
+    will-change:transform;
+    margin-bottom:26px;
+  }
+
+  .hero h1{
+    font-family:var(--serif);
+    font-size:clamp(48px, 9vw, 94px);
+    font-weight:500;
+    line-height:1.02;
+    letter-spacing:-0.01em;
+    color:var(--text);
+    opacity:0;
+    animation:rise .9s ease .36s forwards;
+    position:relative;
+    transform-style:preserve-3d;
+    text-shadow:
+      0 1px 0 rgba(255,255,255,0.06),
+      0 2px 12px rgba(0,0,0,0.4),
+      0 0 60px rgba(124,155,255,0.12);
+  }
+  .hero h1 em{
+    font-style:italic;
+    color:var(--accent);
+    text-shadow:0 0 40px var(--accent-glow), 0 2px 12px rgba(0,0,0,0.4);
+  }
+  .hero h1 .layer{
+    position:absolute;
+    inset:0;
+    z-index:-1;
+    color:transparent;
+    -webkit-text-stroke:1px rgba(124,155,255,0.06);
+  }
+
+  .hero-sub{
+    font-size:18px;
+    font-weight:300;
+    color:var(--text-dim);
+    max-width:560px;
+    margin-bottom:44px;
+    opacity:0;
+    animation:rise .9s ease .5s forwards;
+  }
+
+  .hero-tags{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    opacity:0;
+    animation:rise .9s ease .64s forwards;
+  }
+  .tag{
+    font-family:var(--mono);
+    font-size:11.5px;
+    padding:7px 14px;
+    border:1px solid var(--line);
+    border-radius:100px;
+    color:var(--text-dim);
+    background:rgba(17,19,25,0.5);
+    backdrop-filter:blur(6px);
+    letter-spacing:.02em;
+  }
+
+  @keyframes rise{
+    from{opacity:0;transform:translateY(16px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+
+  .scroll-cue{
+    position:absolute;
+    bottom:38px;
+    left:28px;
+    font-family:var(--mono);
+    font-size:10.5px;
+    color:var(--text-faint);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    opacity:0;
+    animation:fadeIn .7s ease 1.3s forwards;
+  }
+  .scroll-cue::after{
+    content:'';
+    width:1px;height:24px;
+    background:linear-gradient(var(--text-faint), transparent);
+    animation:scrollpulse 2s ease-in-out infinite;
+  }
+  @keyframes scrollpulse{0%,100%{opacity:.25;}50%{opacity:1;}}
+
+  /* ---------- sections ---------- */
+  section{
+    padding:100px 0;
+    border-top:1px solid var(--line-soft);
+    position:relative;
+  }
+
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11.5px;
+    color:var(--accent);
+    margin-bottom:18px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+  }
+  .eyebrow .num{color:var(--text-faint);text-transform:none;}
+
+  h2{
+    font-family:var(--serif);
+    font-size:clamp(30px,4.5vw,42px);
+    font-weight:500;
+    letter-spacing:-0.01em;
+    margin-bottom:26px;
+    max-width:560px;
+    line-height:1.15;
+  }
+
+  .lede{
+    font-size:16.5px;
+    font-weight:300;
+    color:var(--text-dim);
+    max-width:580px;
+    margin-bottom:20px;
+  }
+  .lede + .lede{margin-top:-4px;}
+
+  /* ---------- stack ---------- */
+  .stack-grid{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:1px;
+    background:var(--line-soft);
+    border:1px solid var(--line-soft);
+    margin-top:40px;
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .stack-cell{
+    background:rgba(10,11,14,0.7);
+    backdrop-filter:blur(10px);
+    padding:24px 26px;
+    transition:background .3s ease;
+  }
+  .stack-cell:hover{background:rgba(20,23,32,0.8);}
+  .stack-cell .label{
+    font-family:var(--mono);
+    font-size:10.5px;
+    color:var(--text-faint);
+    letter-spacing:.06em;
+    margin-bottom:14px;
+    text-transform:uppercase;
+  }
+  .stack-cell .items{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .stack-cell .items span{
+    font-family:var(--mono);
+    font-size:13.5px;
+    color:var(--text);
+    padding:4px 0;
+  }
+  .stack-cell .items span::after{
+    content:'·';
+    color:var(--text-faint);
+    margin-left:9px;
+  }
+  .stack-cell .items span:last-child::after{content:'';}
+
+  /* ---------- capability blocks ---------- */
+  .cap{
+    display:grid;
+    grid-template-columns:210px 1fr;
+    gap:36px;
+    padding:36px 0;
+    border-top:1px solid var(--line-soft);
+  }
+  .cap:first-of-type{border-top:none;padding-top:8px;}
+  .cap-head{display:flex;flex-direction:column;gap:6px;}
+  .cap-icon{
+    width:36px;height:36px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:10px;
+    color:var(--accent);
+    background:rgba(124,155,255,0.05);
+  }
+  .cap-icon svg{width:17px;height:17px;}
+  .cap-head h3{
+    font-family:var(--serif);
+    font-size:20px;
+    font-weight:600;
+    color:var(--text);
+  }
+  .cap-body p{
+    color:var(--text-dim);
+    font-size:15px;
+    font-weight:300;
+    margin-bottom:14px;
+    max-width:490px;
+  }
+  .cap-body ul{
+    list-style:none;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-top:16px;
+  }
+  .cap-body li{
+    font-size:14px;
+    font-weight:300;
+    color:var(--text-dim);
+    padding-left:16px;
+    position:relative;
+  }
+  .cap-body li::before{
+    content:'';
+    position:absolute;
+    left:0;top:9px;
+    width:5px;height:1px;
+    background:var(--accent);
+    opacity:0.6;
+  }
+  .cap-body li b{color:var(--text);font-weight:500;}
+
+  /* ---------- vision ---------- */
+  .vision blockquote{
+    font-family:var(--serif);
+    font-size:clamp(26px,4vw,36px);
+    font-weight:500;
+    font-style:italic;
+    line-height:1.4;
+    letter-spacing:-0.01em;
+    color:var(--text);
+    max-width:640px;
+    position:relative;
+    padding-left:26px;
+    border-left:2px solid var(--accent);
+  }
+  .vision blockquote span{
+    color:var(--accent);
+    text-shadow:0 0 30px var(--accent-glow);
+  }
+  .vision .sign{
+    margin-top:30px;
+    font-family:var(--mono);
+    font-size:13px;
+    font-style:normal;
+    color:var(--text-faint);
+    padding-left:28px;
+    max-width:560px;
+  }
+
+  /* ---------- footer ---------- */
+  footer{padding:50px 0 42px;border-top:1px solid var(--line-soft);}
+  .footer-inner{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+  }
+  .footer-brand{font-family:var(--mono);font-size:12px;color:var(--text-faint);}
+  .footer-brand span{color:var(--accent);}
+  .footer-status{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--text-faint);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .footer-status .led{
+    width:6px;height:6px;border-radius:50%;
+    background:#4ade80;
+    box-shadow:0 0 6px #4ade80;
+  }
+
+  @media (max-width:640px){
+    .wrap{padding:0 20px;}
+    .stack-grid{grid-template-columns:1fr;}
+    .cap{grid-template-columns:1fr;gap:14px;}
+    .topbar-links{gap:14px;}
+    .topbar-links a:nth-child(3){display:none;}
+    .hero{padding-top:100px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;}
+  }
+
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+
+  .loading-veil{
+    position:fixed;inset:0;z-index:100;
+    background:var(--bg);
+    display:flex;align-items:center;justify-content:center;
+    transition:opacity .8s ease, visibility .8s ease;
+  }
+  .loading-veil.hidden{opacity:0;visibility:hidden;}
+  .loading-veil .mark{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--text-faint);
+    letter-spacing:.1em;
+    display:flex;align-items:center;gap:10px;
+  }
+  .loading-veil .mark .led{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 0 10px var(--accent);
+    animation:pulse-led 1s ease-in-out infinite;
+  }
+  @keyframes pulse-led{0%,100%{opacity:0.3;}50%{opacity:1;}}
+</style>
+</head>
+<body>
+
+<div class="loading-veil" id="veil"><div class="mark"><span class="led"></span>initializing</div></div>
+
+<canvas id="bg-canvas"></canvas>
+<div class="vignette"></div>
+<div class="grain"></div>
+
+<audio id="bgm" src="sound.mp3" loop preload="auto"></audio>
+
+<div class="topbar" id="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-brand">emloxa<span class="dot">.</span>dev</div>
+    <div class="topbar-links">
+      <a href="#about">About</a>
+      <a href="#stack">Stack</a>
+      <a href="#work">Work</a>
+      <a href="#vision">Vision</a>
+    </div>
+  </div>
+</div>
+
+<button class="sound-toggle" id="sound-toggle" aria-label="Toggle ambient sound" aria-pressed="false">
+  <div class="bars"><span></span><span></span><span></span></div>
+</button>
+
+<main class="wrap">
+
+  <section class="hero" id="top">
+    <div class="boot-line"><span class="led"></span>system initialized · identity verified · access: full</div>
+
+    <div class="hero-top">
+      <div class="avatar-frame">
+        <img class="avatar" src="https://cdn.discordapp.com/avatars/627878511239233556/a_626a769de49372e79b0dfb0a475ce43e.webp?size=240" alt="Emloxa" loading="eager">
+      </div>
+      <div class="hero-name-block">
+        <div class="name"><span>Emloxa</span> — software engineer</div>
+      </div>
+    </div>
+
+    <div class="hero-3d" id="hero3d">
+      <h1>Understand the system,<br>then rewrite <em>its</em> rules.</h1>
+    </div>
+
+    <p class="hero-sub">Writing code is only the visible part of the work. What actually drives me is dissecting the logic beneath a piece of software, a game, or a network — then reshaping it to my own design.</p>
+
+    <div class="hero-tags">
+      <span class="tag">Reverse Engineering</span>
+      <span class="tag">Systems Architecture</span>
+      <span class="tag">Game Modding</span>
+      <span class="tag">Automation</span>
+    </div>
+
+    <div class="scroll-cue">scroll</div>
+  </section>
+
+  <section id="about">
+    <div class="eyebrow"><span class="num">/</span>about</div>
+    <h2>Decode the rules. Rebuild them on my own terms.</h2>
+    <p class="lede">I rarely settle for software or a game as it's presented. I'd rather unpack the math and logic running underneath — then manipulate it, improve it, or turn it into something else entirely.</p>
+    <p class="lede">Algorithmic thinking and problem-solving carry me across a wide range of work: desktop applications, network tooling, web automation, in-game mechanic modification. To me, coding means finding where a system gives, and rewriting it on my terms.</p>
+  </section>
+
+  <section id="stack">
+    <div class="eyebrow"><span class="num">/</span>stack</div>
+    <h2>The right language for the platform, every time.</h2>
+    <p class="lede">Different goals call for different tools. Each one mapped to a class of problem.</p>
+
+    <div class="stack-grid">
+      <div class="stack-cell">
+        <div class="label">Systems &amp; Performance</div>
+        <div class="items"><span>C</span><span>C++</span><span>C#</span><span>Java</span></div>
+      </div>
+      <div class="stack-cell">
+        <div class="label">Game &amp; Scripting</div>
+        <div class="items"><span>Lua</span><span>Luau</span></div>
+      </div>
+      <div class="stack-cell">
+        <div class="label">Automation &amp; Data</div>
+        <div class="items"><span>Python</span></div>
+      </div>
+      <div class="stack-cell">
+        <div class="label">Web</div>
+        <div class="items"><span>HTML</span><span>CSS</span><span>Tailwind</span><span>JavaScript</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="work">
+    <div class="eyebrow"><span class="num">/</span>capabilities</div>
+    <h2>Three domains, one approach: go deep, then rebuild.</h2>
+
+    <div class="cap">
+      <div class="cap-head">
+        <div class="cap-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+        </div>
+        <h3>Game Dev &amp; Reverse Engineering</h3>
+      </div>
+      <div class="cap-body">
+        <p>In games, I'm not just a player — I'm the one setting the rules.</p>
+        <ul>
+          <li><b>System manipulation:</b> intervening in memory management, process monitoring, and entity-rendering behavior to alter in-game mechanics.</li>
+          <li><b>Engine integration:</b> matchmaking systems, intricate UI/UX logic, in-game economies, and probability-driven crafting algorithms.</li>
+          <li><b>Custom mod APIs:</b> writing bespoke layers on top of existing game infrastructure, restructuring everything from inventory limits to interfaces.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cap">
+      <div class="cap-head">
+        <div class="cap-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+        </div>
+        <h3>Desktop &amp; System Software</h3>
+      </div>
+      <div class="cap-body">
+        <p>Deep command of Windows internals lets me ship standalone, high-performance software.</p>
+        <ul>
+          <li>Native Windows multimedia libraries powering dark-mode, professional audio-visual studio applications.</li>
+          <li>Custom licensing modules and security tools that track system processes.</li>
+          <li>Python (CustomTkinter) network utilities that monitor local traffic and intervene in ARP cache behavior.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cap">
+      <div class="cap-head">
+        <div class="cap-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a9 9 0 0 1 0 18"></path><line x1="3" y1="12" x2="21" y2="12"></line></svg>
+        </div>
+        <h3>Web &amp; AI Automation</h3>
+      </div>
+      <div class="cap-body">
+        <p>Modern web technology, used to build tools that push past their intended limits.</p>
+        <ul>
+          <li><b>Browser extensions:</b> bypassing content security policies, converting a cropped screen region to text via OCR.</li>
+          <li><b>Automation &amp; scraping:</b> DOM button injectors and custom API payloads routing web media straight into the browser's download manager.</li>
+          <li><b>AI panels:</b> memory-backed, responsive interfaces where multiple AI agents work in parallel to automate tasks like code segmentation and document editing.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="vision" class="vision">
+    <div class="eyebrow"><span class="num">/</span>vision</div>
+    <blockquote>When a system says <span>"impossible,"</span> that just means the right algorithm hasn't been written yet.</blockquote>
+    <div class="sign">As Emloxa, every new project means looking behind the firewall, rewriting the DNA of the code, and turning the edges of technology into my own playground.</div>
+  </section>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-brand">emloxa<span>.</span>dev · 2026</div>
+      <div class="footer-status"><span class="led"></span>online</div>
+    </div>
+  </footer>
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+  /* ---------- mystical particle-network background ---------- */
+  (function(){
+    const canvas = document.getElementById('bg-canvas');
+    let renderer, scene, camera, particles, lines, raf;
+    let mouseX = 0, mouseY = 0, targetRotX = 0, targetRotY = 0;
+    const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function init(){
+      try{
+        renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x050608, 0.0016);
+
+        camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 3000);
+        camera.position.z = 700;
+
+        const COUNT = window.innerWidth < 640 ? 140 : 260;
+        const positions = new Float32Array(COUNT * 3);
+        const speeds = [];
+        for(let i=0;i<COUNT;i++){
+          positions[i*3]   = (Math.random()-0.5) * 1800;
+          positions[i*3+1] = (Math.random()-0.5) * 1200;
+          positions[i*3+2] = (Math.random()-0.5) * 1200;
+          speeds.push({
+            dx:(Math.random()-0.5)*0.15,
+            dy:(Math.random()-0.5)*0.15,
+            dz:(Math.random()-0.5)*0.15
+          });
+        }
+
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+        const sprite = makeGlowTexture();
+        const mat = new THREE.PointsMaterial({
+          size: 5.5,
+          map: sprite,
+          transparent: true,
+          opacity: 0.85,
+          color: 0x9db4ff,
+          blending: THREE.AdditiveBlending,
+          depthWrite:false
+        });
+
+        particles = new THREE.Points(geo, mat);
+        particles.userData.speeds = speeds;
+        scene.add(particles);
+
+        // connecting line network
+        const lineMat = new THREE.LineBasicMaterial({
+          color: 0x5b6fae,
+          transparent:true,
+          opacity:0.12,
+          blending: THREE.AdditiveBlending
+        });
+        const lineGeo = new THREE.BufferGeometry();
+        lines = new THREE.LineSegments(lineGeo, lineMat);
+        scene.add(lines);
+
+        window.addEventListener('resize', onResize, { passive:true });
+        window.addEventListener('mousemove', onMouseMove, { passive:true });
+        window.addEventListener('touchmove', onTouchMove, { passive:true });
+
+        animate();
+      }catch(e){
+        // WebGL unavailable — leave canvas as transparent static background, no error shown
+        canvas.style.display = 'none';
+      }
+    }
+
+    function makeGlowTexture(){
+      const c = document.createElement('canvas');
+      c.width = c.height = 64;
+      const ctx = c.getContext('2d');
+      const g = ctx.createRadialGradient(32,32,0,32,32,32);
+      g.addColorStop(0, 'rgba(255,255,255,1)');
+      g.addColorStop(0.35, 'rgba(180,200,255,0.6)');
+      g.addColorStop(1, 'rgba(180,200,255,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,64,64);
+      return new THREE.CanvasTexture(c);
+    }
+
+    function onResize(){
+      camera.aspect = window.innerWidth/window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function onMouseMove(e){
+      mouseX = (e.clientX / window.innerWidth - 0.5);
+      mouseY = (e.clientY / window.innerHeight - 0.5);
+    }
+    function onTouchMove(e){
+      if(!e.touches || !e.touches[0]) return;
+      mouseX = (e.touches[0].clientX / window.innerWidth - 0.5);
+      mouseY = (e.touches[0].clientY / window.innerHeight - 0.5);
+    }
+
+    const LINK_DIST = 165;
+
+    function updateLines(positions, count){
+      const linePositions = [];
+      for(let i=0;i<count;i++){
+        for(let j=i+1;j<count;j++){
+          const dx = positions[i*3]-positions[j*3];
+          const dy = positions[i*3+1]-positions[j*3+1];
+          const dz = positions[i*3+2]-positions[j*3+2];
+          const distSq = dx*dx+dy*dy+dz*dz;
+          if(distSq < LINK_DIST*LINK_DIST){
+            linePositions.push(positions[i*3],positions[i*3+1],positions[i*3+2]);
+            linePositions.push(positions[j*3],positions[j*3+1],positions[j*3+2]);
+          }
+        }
+      }
+      lines.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(linePositions), 3));
+    }
+
+    let frame = 0;
+    function animate(){
+      raf = requestAnimationFrame(animate);
+      frame++;
+
+      const pos = particles.geometry.attributes.position.array;
+      const speeds = particles.userData.speeds;
+      const count = speeds.length;
+
+      for(let i=0;i<count;i++){
+        pos[i*3]   += speeds[i].dx;
+        pos[i*3+1] += speeds[i].dy;
+        pos[i*3+2] += speeds[i].dz;
+
+        if(pos[i*3] > 900 || pos[i*3] < -900) speeds[i].dx *= -1;
+        if(pos[i*3+1] > 600 || pos[i*3+1] < -600) speeds[i].dy *= -1;
+        if(pos[i*3+2] > 600 || pos[i*3+2] < -600) speeds[i].dz *= -1;
+      }
+      particles.geometry.attributes.position.needsUpdate = true;
+
+      // recompute connective lines every few frames for performance
+      if(frame % 3 === 0){
+        updateLines(pos, count);
+      }
+
+      targetRotX += (mouseY*0.25 - targetRotX) * 0.02;
+      targetRotY += (mouseX*0.35 - targetRotY) * 0.02;
+      scene.rotation.x = targetRotX;
+      scene.rotation.y = targetRotY;
+
+      particles.rotation.y += 0.00035;
+      lines.rotation.y += 0.00035;
+
+      renderer.render(scene, camera);
+    }
+
+    if(!isReducedMotion && window.WebGLRenderingContext){
+      init();
+    }else{
+      canvas.style.display = 'none';
+    }
+  })();
+
+  /* ---------- 3D tilt on hero heading ---------- */
+  (function(){
+    const hero3d = document.getElementById('hero3d');
+    const isTouch = window.matchMedia('(pointer: coarse)').matches;
+    if(isTouch || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    let curX = 0, curY = 0, tX = 0, tY = 0;
+
+    window.addEventListener('mousemove', (e) => {
+      const nx = (e.clientX / window.innerWidth - 0.5);
+      const ny = (e.clientY / window.innerHeight - 0.5);
+      tX = ny * -10;
+      tY = nx * 14;
+    }, { passive:true });
+
+    function loop(){
+      curX += (tX - curX) * 0.06;
+      curY += (tY - curY) * 0.06;
+      hero3d.style.transform = `rotateX(${curX}deg) rotateY(${curY}deg)`;
+      requestAnimationFrame(loop);
+    }
+    loop();
+  })();
+
+  /* ---------- topbar reveal ---------- */
+  const topbar = document.getElementById('topbar');
+  window.addEventListener('scroll', () => {
+    topbar.classList.toggle('visible', window.scrollY > window.innerHeight * 0.6);
+  }, { passive:true });
+
+  /* ---------- background audio ---------- */
+  const bgm = document.getElementById('bgm');
+  const soundBtn = document.getElementById('sound-toggle');
+  let audioFailed = false;
+
+  bgm.addEventListener('error', () => {
+    audioFailed = true;
+    soundBtn.style.display = 'none';
+  });
+
+  soundBtn.addEventListener('click', () => {
+    if (audioFailed) return;
+    if (bgm.paused){
+      bgm.volume = 0.32;
+      bgm.play().then(() => {
+        soundBtn.classList.add('playing');
+        soundBtn.setAttribute('aria-pressed','true');
+      }).catch(() => {});
+    } else {
+      bgm.pause();
+      soundBtn.classList.remove('playing');
+      soundBtn.setAttribute('aria-pressed','false');
+    }
+  });
+
+  /* ---------- smooth in-page nav ---------- */
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', (e) => {
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target){
+        e.preventDefault();
+        target.scrollIntoView({ behavior:'smooth', block:'start' });
+      }
+    });
+  });
+
+  /* ---------- loading veil ---------- */
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      document.getElementById('veil').classList.add('hidden');
+    }, 400);
+  });
+</script>
+
+</body>
+</html>
