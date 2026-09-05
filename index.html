@@ -7,7 +7,7 @@
 <meta name="description" content="Emloxa — software engineer, reverse engineer, systems architecture enthusiast.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600&family=Noto+Sans+Arabic:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#050608;
@@ -20,6 +20,7 @@
     --text-faint:#4d5261;
     --accent:#7c9bff;
     --accent-2:#b98dff;
+    --accent-3:#5ee6c8;
     --accent-glow:rgba(124,155,255,0.35);
     --mono:'IBM Plex Mono', monospace;
     --sans:'Inter', sans-serif;
@@ -38,6 +39,14 @@
     -webkit-font-smoothing:antialiased;
     overflow-x:hidden;
   }
+
+  body[dir="rtl"] .cap{grid-template-columns:1fr 210px;}
+  body[dir="rtl"] .cap-body li{padding-left:0;padding-right:16px;}
+  body[dir="rtl"] .cap-body li::before{left:auto;right:0;}
+  body[dir="rtl"] .vision blockquote{border-left:none;border-right:2px solid var(--accent);padding-left:0;padding-right:26px;}
+  body[dir="rtl"] .vision .sign{padding-left:0;padding-right:28px;}
+  body[dir="rtl"] .eyebrow{flex-direction:row-reverse;justify-content:flex-end;}
+  body[dir="rtl"] .scroll-cue{right:28px;left:auto;}
 
   #bg-canvas{
     position:fixed;
@@ -66,6 +75,25 @@
     background:radial-gradient(ellipse at 50% 30%, transparent 30%, rgba(5,6,8,0.55) 85%, var(--bg) 100%);
   }
 
+  .aurora{
+    position:fixed;
+    inset:-20%;
+    z-index:0;
+    pointer-events:none;
+    opacity:0.5;
+    filter:blur(90px);
+    background:
+      radial-gradient(circle at 20% 20%, rgba(124,155,255,0.16), transparent 45%),
+      radial-gradient(circle at 80% 60%, rgba(185,141,255,0.13), transparent 45%),
+      radial-gradient(circle at 50% 90%, rgba(94,230,200,0.09), transparent 50%);
+    animation:auroraDrift 26s ease-in-out infinite alternate;
+  }
+  @keyframes auroraDrift{
+    0%{transform:translate(0,0) scale(1) rotate(0deg);}
+    50%{transform:translate(-2%,3%) scale(1.08) rotate(6deg);}
+    100%{transform:translate(3%,-2%) scale(1.03) rotate(-4deg);}
+  }
+
   ::selection{background:var(--accent-glow);color:#fff;}
   a{color:inherit;}
 
@@ -81,7 +109,7 @@
   .topbar{
     position:fixed;
     top:0;left:0;right:0;
-    z-index:50;
+    z-index:80;
     background:rgba(5,6,8,0.55);
     backdrop-filter:blur(14px) saturate(140%);
     -webkit-backdrop-filter:blur(14px) saturate(140%);
@@ -100,12 +128,98 @@
     justify-content:space-between;
     font-family:var(--mono);
     font-size:12.5px;
+    gap:16px;
   }
-  .topbar-brand{color:var(--text);font-weight:500;letter-spacing:.03em;}
-  .topbar-brand .dot{color:var(--accent);}
+  .topbar-brand{color:var(--text);font-weight:500;letter-spacing:.03em;flex-shrink:0;}
   .topbar-links{display:flex;gap:24px;color:var(--text-dim);}
   .topbar-links a{text-decoration:none;transition:color .25s;}
   .topbar-links a:hover{color:var(--accent);}
+  .topbar-right{display:flex;align-items:center;gap:14px;margin-left:auto;}
+
+  /* ---------- always-visible mini bar for lang switcher pre-scroll ---------- */
+  .lang-perch{
+    position:fixed;
+    top:18px;
+    right:22px;
+    z-index:90;
+    opacity:0;
+    animation:fadeIn .6s ease .3s forwards;
+    transition:opacity .3s ease;
+  }
+  body[dir="rtl"] .lang-perch{right:auto;left:22px;}
+  .topbar.visible ~ .lang-perch,
+  .lang-perch.hide-perch{opacity:0;pointer-events:none;}
+
+  /* ---------- language switcher ---------- */
+  .lang-switch{position:relative;}
+  .lang-btn{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:rgba(17,19,25,0.7);
+    backdrop-filter:blur(10px);
+    border:1px solid var(--line);
+    border-radius:100px;
+    padding:7px 12px 7px 10px;
+    cursor:pointer;
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--text-dim);
+    transition:border-color .25s, background .25s;
+  }
+  .lang-btn:hover{border-color:var(--accent-dim, var(--accent));color:var(--text);}
+  .lang-btn .flag{font-size:15px;line-height:1;}
+  .lang-btn .code{letter-spacing:.03em;text-transform:uppercase;}
+  .lang-btn .caret{width:8px;height:8px;opacity:.6;transition:transform .25s;}
+  .lang-switch.open .lang-btn .caret{transform:rotate(180deg);}
+
+  .lang-menu{
+    position:absolute;
+    top:calc(100% + 10px);
+    right:0;
+    min-width:210px;
+    max-height:340px;
+    overflow-y:auto;
+    background:rgba(10,11,15,0.92);
+    backdrop-filter:blur(18px) saturate(140%);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:6px;
+    opacity:0;
+    transform:translateY(-8px) scale(0.97);
+    pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;
+    box-shadow:0 20px 50px rgba(0,0,0,0.5);
+    z-index:95;
+  }
+  body[dir="rtl"] .lang-menu{right:auto;left:0;}
+  .lang-switch.open .lang-menu{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
+  .lang-menu::-webkit-scrollbar{width:6px;}
+  .lang-menu::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+
+  .lang-option{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    width:100%;
+    padding:9px 10px;
+    border-radius:9px;
+    background:none;
+    border:none;
+    color:var(--text-dim);
+    font-family:var(--sans);
+    font-size:13.5px;
+    text-align:left;
+    cursor:pointer;
+    transition:background .18s, color .18s;
+  }
+  body[dir="rtl"] .lang-option{text-align:right;}
+  .lang-option:hover{background:rgba(124,155,255,0.08);color:var(--text);}
+  .lang-option.active{color:var(--accent);background:rgba(124,155,255,0.1);}
+  .lang-option .flag{font-size:17px;line-height:1;}
+  .lang-option .native{font-weight:500;}
+  .lang-option .check{margin-left:auto;width:14px;height:14px;flex-shrink:0;}
+  body[dir="rtl"] .lang-option .check{margin-left:0;margin-right:auto;}
 
   /* ---------- sound toggle ---------- */
   .sound-toggle{
@@ -126,6 +240,7 @@
     opacity:0;
     animation:fadeIn .7s ease 1.6s forwards;
   }
+  body[dir="rtl"] .sound-toggle{right:auto;left:26px;}
   .sound-toggle:hover{border-color:var(--accent);transform:scale(1.06);box-shadow:0 0 22px var(--accent-glow);}
   .sound-toggle .bars{display:flex;align-items:center;gap:2.5px;height:15px;}
   .sound-toggle .bars span{
@@ -153,25 +268,6 @@
     perspective:1400px;
   }
 
-  .boot-line{
-    font-family:var(--mono);
-    font-size:12px;
-    color:var(--text-faint);
-    margin-bottom:30px;
-    opacity:0;
-    animation:rise .7s ease .1s forwards;
-    display:flex;
-    align-items:center;
-    gap:10px;
-    letter-spacing:.02em;
-  }
-  .boot-line .led{
-    width:6px;height:6px;border-radius:50%;
-    background:var(--accent);
-    box-shadow:0 0 10px var(--accent);
-    flex-shrink:0;
-  }
-
   .hero-top{
     display:flex;
     align-items:center;
@@ -190,10 +286,22 @@
     position:absolute;
     inset:-6px;
     border-radius:18px;
-    background:conic-gradient(from 0deg, var(--accent), var(--accent-2), var(--accent));
-    opacity:0.5;
-    filter:blur(8px);
+    background:conic-gradient(from 0deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent));
+    opacity:0.55;
+    filter:blur(9px);
     animation:spin 8s linear infinite;
+  }
+  .avatar-frame::after{
+    content:'';
+    position:absolute;
+    inset:-14px;
+    border-radius:24px;
+    border:1px solid rgba(124,155,255,0.15);
+    animation:pulseRing 3s ease-in-out infinite;
+  }
+  @keyframes pulseRing{
+    0%,100%{transform:scale(1);opacity:0.5;}
+    50%{transform:scale(1.08);opacity:0;}
   }
   .avatar{
     position:relative;
@@ -221,9 +329,9 @@
 
   .hero h1{
     font-family:var(--serif);
-    font-size:clamp(48px, 9vw, 94px);
+    font-size:clamp(44px, 8.5vw, 92px);
     font-weight:500;
-    line-height:1.02;
+    line-height:1.05;
     letter-spacing:-0.01em;
     color:var(--text);
     opacity:0;
@@ -234,19 +342,32 @@
       0 1px 0 rgba(255,255,255,0.06),
       0 2px 12px rgba(0,0,0,0.4),
       0 0 60px rgba(124,155,255,0.12);
+    background:linear-gradient(180deg, #ffffff 0%, var(--text) 55%, #b9c2d6 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+  html[data-lang="ar"] .hero h1,
+  html[data-lang="ja"] .hero h1,
+  html[data-lang="ko"] .hero h1,
+  html[data-lang="zh"] .hero h1,
+  html[data-lang="hi"] .hero h1{
+    font-family:var(--sans);
+    font-weight:600;
   }
   .hero h1 em{
     font-style:italic;
-    color:var(--accent);
-    text-shadow:0 0 40px var(--accent-glow), 0 2px 12px rgba(0,0,0,0.4);
+    background:linear-gradient(120deg, var(--accent), var(--accent-2));
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 0 30px var(--accent-glow));
   }
-  .hero h1 .layer{
-    position:absolute;
-    inset:0;
-    z-index:-1;
-    color:transparent;
-    -webkit-text-stroke:1px rgba(124,155,255,0.06);
-  }
+  html[data-lang="ar"] .hero h1 em,
+  html[data-lang="ja"] .hero h1 em,
+  html[data-lang="ko"] .hero h1 em,
+  html[data-lang="zh"] .hero h1 em,
+  html[data-lang="hi"] .hero h1 em{font-style:normal;}
 
   .hero-sub{
     font-size:18px;
@@ -275,7 +396,20 @@
     background:rgba(17,19,25,0.5);
     backdrop-filter:blur(6px);
     letter-spacing:.02em;
+    position:relative;
+    overflow:hidden;
+    transition:border-color .3s, color .3s;
   }
+  .tag::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:linear-gradient(120deg, transparent, rgba(124,155,255,0.18), transparent);
+    transform:translateX(-120%);
+    transition:transform .6s ease;
+  }
+  .tag:hover{border-color:var(--accent);color:var(--text);}
+  .tag:hover::before{transform:translateX(120%);}
 
   @keyframes rise{
     from{opacity:0;transform:translateY(16px);}
@@ -312,6 +446,16 @@
     position:relative;
   }
 
+  .reveal{
+    opacity:0;
+    transform:translateY(28px);
+    transition:opacity .9s cubic-bezier(.16,1,.3,1), transform .9s cubic-bezier(.16,1,.3,1);
+  }
+  .reveal.in-view{opacity:1;transform:translateY(0);}
+  .reveal-delay-1{transition-delay:.08s;}
+  .reveal-delay-2{transition-delay:.16s;}
+  .reveal-delay-3{transition-delay:.24s;}
+
   .eyebrow{
     font-family:var(--mono);
     font-size:11.5px;
@@ -324,6 +468,17 @@
     text-transform:uppercase;
   }
   .eyebrow .num{color:var(--text-faint);text-transform:none;}
+  .eyebrow .num::before{
+    content:'';
+    display:inline-block;
+    width:5px;height:5px;
+    border-radius:50%;
+    background:var(--accent);
+    margin-right:8px;
+    box-shadow:0 0 8px var(--accent);
+    vertical-align:middle;
+  }
+  body[dir="rtl"] .eyebrow .num::before{margin-right:0;margin-left:8px;}
 
   h2{
     font-family:var(--serif);
@@ -334,6 +489,8 @@
     max-width:560px;
     line-height:1.15;
   }
+  html[data-lang="ar"] h2, html[data-lang="ja"] h2, html[data-lang="ko"] h2,
+  html[data-lang="zh"] h2, html[data-lang="hi"] h2{font-family:var(--sans);font-weight:600;}
 
   .lede{
     font-size:16.5px;
@@ -360,8 +517,18 @@
     backdrop-filter:blur(10px);
     padding:24px 26px;
     transition:background .3s ease;
+    position:relative;
   }
-  .stack-cell:hover{background:rgba(20,23,32,0.8);}
+  .stack-cell:hover{background:rgba(20,23,32,0.85);}
+  .stack-cell:hover::before{opacity:1;}
+  .stack-cell::before{
+    content:'';
+    position:absolute;
+    top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg, var(--accent), var(--accent-2));
+    opacity:0;
+    transition:opacity .3s;
+  }
   .stack-cell .label{
     font-family:var(--mono);
     font-size:10.5px;
@@ -408,7 +575,9 @@
     margin-bottom:10px;
     color:var(--accent);
     background:rgba(124,155,255,0.05);
+    transition:transform .35s cubic-bezier(.16,1,.3,1), box-shadow .35s;
   }
+  .cap:hover .cap-icon{transform:rotate(-8deg) scale(1.08);box-shadow:0 0 24px rgba(124,155,255,0.25);}
   .cap-icon svg{width:17px;height:17px;}
   .cap-head h3{
     font-family:var(--serif);
@@ -416,6 +585,8 @@
     font-weight:600;
     color:var(--text);
   }
+  html[data-lang="ar"] .cap-head h3, html[data-lang="ja"] .cap-head h3, html[data-lang="ko"] .cap-head h3,
+  html[data-lang="zh"] .cap-head h3, html[data-lang="hi"] .cap-head h3{font-family:var(--sans);}
   .cap-body p{
     color:var(--text-dim);
     font-size:15px;
@@ -461,9 +632,14 @@
     padding-left:26px;
     border-left:2px solid var(--accent);
   }
+  html[data-lang="ar"] .vision blockquote, html[data-lang="ja"] .vision blockquote, html[data-lang="ko"] .vision blockquote,
+  html[data-lang="zh"] .vision blockquote, html[data-lang="hi"] .vision blockquote{font-family:var(--sans);font-style:normal;font-weight:500;}
   .vision blockquote span{
-    color:var(--accent);
-    text-shadow:0 0 30px var(--accent-glow);
+    background:linear-gradient(120deg, var(--accent), var(--accent-2));
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 0 20px var(--accent-glow));
   }
   .vision .sign{
     margin-top:30px;
@@ -485,7 +661,6 @@
     gap:16px;
   }
   .footer-brand{font-family:var(--mono);font-size:12px;color:var(--text-faint);}
-  .footer-brand span{color:var(--accent);}
   .footer-status{
     font-family:var(--mono);
     font-size:11px;
@@ -498,15 +673,18 @@
     width:6px;height:6px;border-radius:50%;
     background:#4ade80;
     box-shadow:0 0 6px #4ade80;
+    animation:pulse-led 1.6s ease-in-out infinite;
   }
+  @keyframes pulse-led{0%,100%{opacity:0.5;}50%{opacity:1;}}
 
   @media (max-width:640px){
     .wrap{padding:0 20px;}
     .stack-grid{grid-template-columns:1fr;}
     .cap{grid-template-columns:1fr;gap:14px;}
-    .topbar-links{gap:14px;}
-    .topbar-links a:nth-child(3){display:none;}
+    .topbar-links{display:none;}
     .hero{padding-top:100px;}
+    .lang-perch{top:16px;right:16px;}
+    body[dir="rtl"] .lang-perch{left:16px;right:auto;}
   }
 
   @media (prefers-reduced-motion: reduce){
@@ -533,29 +711,41 @@
     width:6px;height:6px;border-radius:50%;
     background:var(--accent);
     box-shadow:0 0 10px var(--accent);
-    animation:pulse-led 1s ease-in-out infinite;
+    animation:pulse-led2 1s ease-in-out infinite;
   }
-  @keyframes pulse-led{0%,100%{opacity:0.3;}50%{opacity:1;}}
+  @keyframes pulse-led2{0%,100%{opacity:0.3;}50%{opacity:1;}}
 </style>
 </head>
 <body>
 
-<div class="loading-veil" id="veil"><div class="mark"><span class="led"></span>initializing</div></div>
+<div class="loading-veil" id="veil"><div class="mark"><span class="led"></span><span data-i18n="loading">initializing</span></div></div>
 
 <canvas id="bg-canvas"></canvas>
+<div class="aurora"></div>
 <div class="vignette"></div>
 <div class="grain"></div>
 
 <audio id="bgm" src="sound.mp3" loop preload="auto"></audio>
 
+<div class="lang-perch" id="langPerch">
+  <div class="lang-switch" id="langSwitch">
+    <button class="lang-btn" id="langBtn" aria-haspopup="listbox" aria-expanded="false">
+      <span class="flag" id="langFlagPerch">🌐</span>
+      <span class="code" id="langCodePerch">EN</span>
+      <svg class="caret" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="lang-menu" id="langMenu" role="listbox"></div>
+  </div>
+</div>
+
 <div class="topbar" id="topbar">
   <div class="topbar-inner">
     <div class="topbar-brand">emloxa</div>
     <div class="topbar-links">
-      <a href="#about">About</a>
-      <a href="#stack">Stack</a>
-      <a href="#work">Work</a>
-      <a href="#vision">Vision</a>
+      <a href="#about" data-i18n="nav_about">About</a>
+      <a href="#stack" data-i18n="nav_stack">Stack</a>
+      <a href="#work" data-i18n="nav_work">Work</a>
+      <a href="#vision" data-i18n="nav_vision">Vision</a>
     </div>
   </div>
 </div>
@@ -572,124 +762,126 @@
         <img class="avatar" src="https://cdn.discordapp.com/avatars/627878511239233556/a_626a769de49372e79b0dfb0a475ce43e.webp?size=240" alt="Emloxa" loading="eager">
       </div>
       <div class="hero-name-block">
-        <div class="name"><span>Emloxa</span> — software engineer</div>
+        <div class="name"><span>Emloxa</span> — <span data-i18n="hero_role">software engineer</span></div>
       </div>
     </div>
 
     <div class="hero-3d" id="hero3d">
-      <h1>Understand the system,<br>then rewrite <em>its</em> rules.</h1>
+      <h1 data-i18n-html="hero_title">Understand the system,<br>then rewrite <em>its</em> rules.</h1>
     </div>
 
-    <p class="hero-sub">Writing code is only the visible part of the work. What actually drives me is dissecting the logic beneath a piece of software, a game, or a network — then reshaping it to my own design.</p>
+    <p class="hero-sub" data-i18n="hero_sub">Writing code is only the visible part of the work. What actually drives me is dissecting the logic beneath a piece of software, a game, or a network — then reshaping it to my own design.</p>
 
     <div class="hero-tags">
-      <span class="tag">Reverse Engineering</span>
-      <span class="tag">Systems Architecture</span>
-      <span class="tag">Game Modding</span>
-      <span class="tag">Automation</span>
+      <span class="tag" data-i18n="tag_1">Reverse Engineering</span>
+      <span class="tag" data-i18n="tag_2">Systems Architecture</span>
+      <span class="tag" data-i18n="tag_3">Game Modding</span>
+      <span class="tag" data-i18n="tag_4">Automation</span>
     </div>
 
-    <div class="scroll-cue">scroll</div>
+    <div class="scroll-cue" data-i18n="scroll">scroll</div>
   </section>
 
   <section id="about">
-    <div class="eyebrow"><span class="num">/</span>about</div>
-    <h2>Decode the rules. Rebuild them on my own terms.</h2>
-    <p class="lede">I rarely settle for software or a game as it's presented. I'd rather unpack the math and logic running underneath — then manipulate it, improve it, or turn it into something else entirely.</p>
-    <p class="lede">Algorithmic thinking and problem-solving carry me across a wide range of work: desktop applications, network tooling, web automation, in-game mechanic modification. To me, coding means finding where a system gives, and rewriting it on my terms.</p>
+    <div class="wrap-inner">
+      <div class="eyebrow reveal"><span class="num" data-i18n="eyebrow_about">about</span></div>
+      <h2 class="reveal reveal-delay-1" data-i18n="about_title">Decode the rules. Rebuild them on my own terms.</h2>
+      <p class="lede reveal reveal-delay-2" data-i18n="about_p1">I rarely settle for software or a game as it's presented. I'd rather unpack the math and logic running underneath — then manipulate it, improve it, or turn it into something else entirely.</p>
+      <p class="lede reveal reveal-delay-3" data-i18n="about_p2">Algorithmic thinking and problem-solving carry me across a wide range of work: desktop applications, network tooling, web automation, in-game mechanic modification. To me, coding means finding where a system gives, and rewriting it on my terms.</p>
+    </div>
   </section>
 
   <section id="stack">
-    <div class="eyebrow"><span class="num">/</span>stack</div>
-    <h2>The right language for the platform, every time.</h2>
-    <p class="lede">Different goals call for different tools. Each one mapped to a class of problem.</p>
+    <div class="eyebrow reveal"><span class="num" data-i18n="eyebrow_stack">stack</span></div>
+    <h2 class="reveal reveal-delay-1" data-i18n="stack_title">The right language for the platform, every time.</h2>
+    <p class="lede reveal reveal-delay-2" data-i18n="stack_p">Different goals call for different tools. Each one mapped to a class of problem.</p>
 
-    <div class="stack-grid">
+    <div class="stack-grid reveal reveal-delay-3">
       <div class="stack-cell">
-        <div class="label">Systems &amp; Performance</div>
+        <div class="label" data-i18n="stack_1_label">Systems &amp; Performance</div>
         <div class="items"><span>C</span><span>C++</span><span>C#</span><span>Java</span></div>
       </div>
       <div class="stack-cell">
-        <div class="label">Game &amp; Scripting</div>
+        <div class="label" data-i18n="stack_2_label">Game &amp; Scripting</div>
         <div class="items"><span>Lua</span><span>Luau</span></div>
       </div>
       <div class="stack-cell">
-        <div class="label">Automation &amp; Data</div>
+        <div class="label" data-i18n="stack_3_label">Automation &amp; Data</div>
         <div class="items"><span>Python</span></div>
       </div>
       <div class="stack-cell">
-        <div class="label">Web</div>
+        <div class="label" data-i18n="stack_4_label">Web</div>
         <div class="items"><span>HTML</span><span>CSS</span><span>Tailwind</span><span>JavaScript</span></div>
       </div>
     </div>
   </section>
 
   <section id="work">
-    <div class="eyebrow"><span class="num">/</span>capabilities</div>
-    <h2>Three domains, one approach: go deep, then rebuild.</h2>
+    <div class="eyebrow reveal"><span class="num" data-i18n="eyebrow_work">capabilities</span></div>
+    <h2 class="reveal reveal-delay-1" data-i18n="work_title">Three domains, one approach: go deep, then rebuild.</h2>
 
-    <div class="cap">
+    <div class="cap reveal">
       <div class="cap-head">
         <div class="cap-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
         </div>
-        <h3>Game Dev &amp; Reverse Engineering</h3>
+        <h3 data-i18n="cap1_title">Game Dev &amp; Reverse Engineering</h3>
       </div>
       <div class="cap-body">
-        <p>In games, I'm not just a player — I'm the one setting the rules.</p>
+        <p data-i18n="cap1_p">In games, I'm not just a player — I'm the one setting the rules.</p>
         <ul>
-          <li><b>System manipulation:</b> intervening in memory management, process monitoring, and entity-rendering behavior to alter in-game mechanics.</li>
-          <li><b>Engine integration:</b> matchmaking systems, intricate UI/UX logic, in-game economies, and probability-driven crafting algorithms.</li>
-          <li><b>Custom mod APIs:</b> writing bespoke layers on top of existing game infrastructure, restructuring everything from inventory limits to interfaces.</li>
+          <li data-i18n-html="cap1_li1"><b>System manipulation:</b> intervening in memory management, process monitoring, and entity-rendering behavior to alter in-game mechanics.</li>
+          <li data-i18n-html="cap1_li2"><b>Engine integration:</b> matchmaking systems, intricate UI/UX logic, in-game economies, and probability-driven crafting algorithms.</li>
+          <li data-i18n-html="cap1_li3"><b>Custom mod APIs:</b> writing bespoke layers on top of existing game infrastructure, restructuring everything from inventory limits to interfaces.</li>
         </ul>
       </div>
     </div>
 
-    <div class="cap">
+    <div class="cap reveal">
       <div class="cap-head">
         <div class="cap-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
         </div>
-        <h3>Desktop &amp; System Software</h3>
+        <h3 data-i18n="cap2_title">Desktop &amp; System Software</h3>
       </div>
       <div class="cap-body">
-        <p>Deep command of Windows internals lets me ship standalone, high-performance software.</p>
+        <p data-i18n="cap2_p">Deep command of Windows internals lets me ship standalone, high-performance software.</p>
         <ul>
-          <li>Native Windows multimedia libraries powering dark-mode, professional audio-visual studio applications.</li>
-          <li>Custom licensing modules and security tools that track system processes.</li>
-          <li>Python (CustomTkinter) network utilities that monitor local traffic and intervene in ARP cache behavior.</li>
+          <li data-i18n="cap2_li1">Native Windows multimedia libraries powering dark-mode, professional audio-visual studio applications.</li>
+          <li data-i18n="cap2_li2">Custom licensing modules and security tools that track system processes.</li>
+          <li data-i18n="cap2_li3">Python (CustomTkinter) network utilities that monitor local traffic and intervene in ARP cache behavior.</li>
         </ul>
       </div>
     </div>
 
-    <div class="cap">
+    <div class="cap reveal">
       <div class="cap-head">
         <div class="cap-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a9 9 0 0 1 0 18"></path><line x1="3" y1="12" x2="21" y2="12"></line></svg>
         </div>
-        <h3>Web &amp; AI Automation</h3>
+        <h3 data-i18n="cap3_title">Web &amp; AI Automation</h3>
       </div>
       <div class="cap-body">
-        <p>Modern web technology, used to build tools that push past their intended limits.</p>
+        <p data-i18n="cap3_p">Modern web technology, used to build tools that push past their intended limits.</p>
         <ul>
-          <li><b>Browser extensions:</b> bypassing content security policies, converting a cropped screen region to text via OCR.</li>
-          <li><b>Automation &amp; scraping:</b> DOM button injectors and custom API payloads routing web media straight into the browser's download manager.</li>
-          <li><b>AI panels:</b> memory-backed, responsive interfaces where multiple AI agents work in parallel to automate tasks like code segmentation and document editing.</li>
+          <li data-i18n-html="cap3_li1"><b>Browser extensions:</b> bypassing content security policies, converting a cropped screen region to text via OCR.</li>
+          <li data-i18n-html="cap3_li2"><b>Automation &amp; scraping:</b> DOM button injectors and custom API payloads routing web media straight into the browser's download manager.</li>
+          <li data-i18n-html="cap3_li3"><b>AI panels:</b> memory-backed, responsive interfaces where multiple AI agents work in parallel to automate tasks like code segmentation and document editing.</li>
         </ul>
       </div>
     </div>
   </section>
 
   <section id="vision" class="vision">
-    <div class="eyebrow"><span class="num">/</span>vision</div>
-    <blockquote>When a system says <span>"impossible,"</span> that just means the right algorithm hasn't been written yet.</blockquote>
-    <div class="sign">As Emloxa, every new project means looking behind the firewall, rewriting the DNA of the code, and turning the edges of technology into my own playground.</div>
+    <div class="eyebrow reveal"><span class="num" data-i18n="eyebrow_vision">vision</span></div>
+    <blockquote class="reveal reveal-delay-1" data-i18n-html="vision_quote">When a system says <span>"impossible,"</span> that just means the right algorithm hasn't been written yet.</blockquote>
+    <div class="sign reveal reveal-delay-2" data-i18n="vision_sign">As Emloxa, every new project means looking behind the firewall, rewriting the DNA of the code, and turning the edges of technology into my own playground.</div>
   </section>
 
   <footer>
     <div class="footer-inner">
       <div class="footer-brand">emloxa · 2026</div>
-      <div class="footer-status"><span class="led"></span>online</div>
+      <div class="footer-status"><span class="led"></span><span data-i18n="online">online</span></div>
     </div>
   </footer>
 
@@ -697,268 +889,1015 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-  /* ---------- mystical particle-network background ---------- */
-  (function(){
-    const canvas = document.getElementById('bg-canvas');
-    let renderer, scene, camera, particles, lines, raf;
-    let mouseX = 0, mouseY = 0, targetRotX = 0, targetRotY = 0;
-    const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* =====================================================================
+   I18N — translations
+   ===================================================================== */
+const LANGS = {
+  en: { name:'English', native:'English', flag:'🇬🇧', dir:'ltr' },
+  tr: { name:'Turkish', native:'Türkçe', flag:'🇹🇷', dir:'ltr' },
+  es: { name:'Spanish', native:'Español', flag:'🇪🇸', dir:'ltr' },
+  fr: { name:'French', native:'Français', flag:'🇫🇷', dir:'ltr' },
+  de: { name:'German', native:'Deutsch', flag:'🇩🇪', dir:'ltr' },
+  pt: { name:'Portuguese', native:'Português', flag:'🇵🇹', dir:'ltr' },
+  it: { name:'Italian', native:'Italiano', flag:'🇮🇹', dir:'ltr' },
+  ru: { name:'Russian', native:'Русский', flag:'🇷🇺', dir:'ltr' },
+  ar: { name:'Arabic', native:'العربية', flag:'🇸🇦', dir:'rtl' },
+  zh: { name:'Chinese', native:'中文', flag:'🇨🇳', dir:'ltr' },
+  ja: { name:'Japanese', native:'日本語', flag:'🇯🇵', dir:'ltr' },
+  ko: { name:'Korean', native:'한국어', flag:'🇰🇷', dir:'ltr' },
+  hi: { name:'Hindi', native:'हिन्दी', flag:'🇮🇳', dir:'ltr' },
+  nl: { name:'Dutch', native:'Nederlands', flag:'🇳🇱', dir:'ltr' },
+  pl: { name:'Polish', native:'Polski', flag:'🇵🇱', dir:'ltr' },
+  id: { name:'Indonesian', native:'Bahasa Indonesia', flag:'🇮🇩', dir:'ltr' }
+};
 
-    function init(){
-      try{
-        renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.setSize(window.innerWidth, window.innerHeight);
+const T = {
+  en:{
+    loading:"initializing", nav_about:"About", nav_stack:"Stack", nav_work:"Work", nav_vision:"Vision",
+    hero_role:"software engineer",
+    hero_title:'Understand the system,<br>then rewrite <em>its</em> rules.',
+    hero_sub:"Writing code is only the visible part of the work. What actually drives me is dissecting the logic beneath a piece of software, a game, or a network — then reshaping it to my own design.",
+    tag_1:"Reverse Engineering", tag_2:"Systems Architecture", tag_3:"Game Modding", tag_4:"Automation",
+    scroll:"scroll",
+    eyebrow_about:"about",
+    about_title:"Decode the rules. Rebuild them on my own terms.",
+    about_p1:"I rarely settle for software or a game as it's presented. I'd rather unpack the math and logic running underneath — then manipulate it, improve it, or turn it into something else entirely.",
+    about_p2:"Algorithmic thinking and problem-solving carry me across a wide range of work: desktop applications, network tooling, web automation, in-game mechanic modification. To me, coding means finding where a system gives, and rewriting it on my terms.",
+    eyebrow_stack:"stack",
+    stack_title:"The right language for the platform, every time.",
+    stack_p:"Different goals call for different tools. Each one mapped to a class of problem.",
+    stack_1_label:"Systems &amp; Performance", stack_2_label:"Game &amp; Scripting", stack_3_label:"Automation &amp; Data", stack_4_label:"Web",
+    eyebrow_work:"capabilities",
+    work_title:"Three domains, one approach: go deep, then rebuild.",
+    cap1_title:"Game Dev &amp; Reverse Engineering",
+    cap1_p:"In games, I'm not just a player — I'm the one setting the rules.",
+    cap1_li1:"<b>System manipulation:</b> intervening in memory management, process monitoring, and entity-rendering behavior to alter in-game mechanics.",
+    cap1_li2:"<b>Engine integration:</b> matchmaking systems, intricate UI/UX logic, in-game economies, and probability-driven crafting algorithms.",
+    cap1_li3:"<b>Custom mod APIs:</b> writing bespoke layers on top of existing game infrastructure, restructuring everything from inventory limits to interfaces.",
+    cap2_title:"Desktop &amp; System Software",
+    cap2_p:"Deep command of Windows internals lets me ship standalone, high-performance software.",
+    cap2_li1:"Native Windows multimedia libraries powering dark-mode, professional audio-visual studio applications.",
+    cap2_li2:"Custom licensing modules and security tools that track system processes.",
+    cap2_li3:"Python (CustomTkinter) network utilities that monitor local traffic and intervene in ARP cache behavior.",
+    cap3_title:"Web &amp; AI Automation",
+    cap3_p:"Modern web technology, used to build tools that push past their intended limits.",
+    cap3_li1:"<b>Browser extensions:</b> bypassing content security policies, converting a cropped screen region to text via OCR.",
+    cap3_li2:"<b>Automation &amp; scraping:</b> DOM button injectors and custom API payloads routing web media straight into the browser's download manager.",
+    cap3_li3:"<b>AI panels:</b> memory-backed, responsive interfaces where multiple AI agents work in parallel to automate tasks like code segmentation and document editing.",
+    eyebrow_vision:"vision",
+    vision_quote:'When a system says <span>"impossible,"</span> that just means the right algorithm hasn\'t been written yet.',
+    vision_sign:"As Emloxa, every new project means looking behind the firewall, rewriting the DNA of the code, and turning the edges of technology into my own playground.",
+    online:"online"
+  },
+  tr:{
+    loading:"başlatılıyor", nav_about:"Hakkımda", nav_stack:"Teknoloji", nav_work:"Yetkinlikler", nav_vision:"Vizyon",
+    hero_role:"yazılım geliştirici",
+    hero_title:'Sistemleri anlamak,<br>sonra <em>kurallarını</em> yeniden yazmak.',
+    hero_sub:"Kod yazmak işin sadece görünen kısmı. Beni asıl motive eden şey; bir yazılımın, oyunun ya da ağın altındaki mantığı çözüp onu kendi tasarımıma göre yeniden şekillendirmek.",
+    tag_1:"Tersine Mühendislik", tag_2:"Sistem Mimarisi", tag_3:"Oyun Modlama", tag_4:"Otomasyon",
+    scroll:"kaydır",
+    eyebrow_about:"hakkımda",
+    about_title:"Kuralları çöz. Kendi terimlerinle yeniden kur.",
+    about_p1:"Bir yazılım ya da oyunla sunulduğu haliyle nadiren yetinirim. Altında çalışan matematiği ve mantığı çözüp onu manipüle etmeyi, geliştirmeyi ya da tamamen başka bir şeye dönüştürmeyi tercih ederim.",
+    about_p2:"Algoritmik düşünce ve problem çözme becerim beni geniş bir alanda üretken kılıyor: masaüstü uygulamaları, ağ araçları, web otomasyonu, oyun içi mekanik modifikasyonu. Benim için kodlamak, bir sistemin nerede esnediğini bulup onu kendi kurallarımla yeniden yazmak demek.",
+    eyebrow_stack:"teknoloji",
+    stack_title:"Platforma her seferinde doğru dili seçmek.",
+    stack_p:"Farklı hedefler farklı araçlar gerektirir. Her biri bir problem sınıfına karşılık gelir.",
+    stack_1_label:"Sistem &amp; Performans", stack_2_label:"Oyun &amp; Betik", stack_3_label:"Otomasyon &amp; Veri", stack_4_label:"Web",
+    eyebrow_work:"yetkinlikler",
+    work_title:"Üç alan, tek yaklaşım: derinlemesine inceleyip yeniden kurmak.",
+    cap1_title:"Oyun Geliştirme &amp; Tersine Mühendislik",
+    cap1_p:"Oyunlarda sadece bir oyuncu değilim — kuralları belirleyen kişiyim.",
+    cap1_li1:"<b>Sistem manipülasyonu:</b> hafıza yönetimi, süreç izleme ve varlık işleme davranışına müdahale ederek oyun içi mekanikleri değiştirmek.",
+    cap1_li2:"<b>Motor entegrasyonu:</b> eşleştirme sistemleri, karmaşık UI/UX mantığı, oyun içi ekonomiler ve olasılık tabanlı üretim algoritmaları.",
+    cap1_li3:"<b>Özel mod API'leri:</b> mevcut oyun altyapısının üzerine özel katmanlar yazarak envanter sınırlarından arayüzlere kadar her şeyi yeniden yapılandırmak.",
+    cap2_title:"Masaüstü &amp; Sistem Yazılımları",
+    cap2_p:"Windows iç yapısına derin hakimiyet, bağımsız ve yüksek performanslı yazılımlar üretmemi sağlıyor.",
+    cap2_li1:"Karanlık mod destekli, profesyonel görsel-işitsel stüdyo uygulamalarını güçlendiren yerel Windows multimedya kütüphaneleri.",
+    cap2_li2:"Sistem süreçlerini takip eden özel lisanslama modülleri ve güvenlik araçları.",
+    cap2_li3:"Yerel ağ trafiğini izleyen ve ARP önbellek davranışına müdahale eden Python (CustomTkinter) ağ araçları.",
+    cap3_title:"Web &amp; Yapay Zeka Otomasyonu",
+    cap3_p:"Modern web teknolojisini, kendi sınırlarını aşan araçlar inşa etmek için kullanıyorum.",
+    cap3_li1:"<b>Tarayıcı uzantıları:</b> içerik güvenlik politikalarını aşmak, kırpılan ekran bölgesini OCR ile metne dönüştürmek.",
+    cap3_li2:"<b>Otomasyon &amp; veri çekme:</b> web medyasını doğrudan tarayıcının indirme yöneticisine yönlendiren DOM buton enjektörleri ve özel API payload'ları.",
+    cap3_li3:"<b>Yapay zeka panelleri:</b> birden fazla yapay zeka ajanının paralel çalışıp kod segmentasyonu ve belge düzenleme gibi görevleri otomatikleştirdiği, hafıza destekli duyarlı arayüzler.",
+    eyebrow_vision:"vizyon",
+    vision_quote:'Bir sistem <span>"imkansız"</span> dediğinde, bu sadece doğru algoritmanın henüz yazılmadığı anlamına gelir.',
+    vision_sign:"Emloxa olarak her yeni proje, güvenlik duvarının arkasına bakmak, kodun DNA'sını yeniden yazmak ve teknolojinin sınırlarını kendi oyun alanıma dönüştürmek demek.",
+    online:"çevrimiçi"
+  },
+  es:{
+    loading:"inicializando", nav_about:"Acerca de", nav_stack:"Tecnologías", nav_work:"Trabajo", nav_vision:"Visión",
+    hero_role:"ingeniero de software",
+    hero_title:'Entender el sistema,<br>y luego reescribir <em>sus</em> reglas.',
+    hero_sub:"Escribir código es solo la parte visible del trabajo. Lo que realmente me impulsa es diseccionar la lógica detrás de un software, un juego o una red, y darle forma según mi propio diseño.",
+    tag_1:"Ingeniería Inversa", tag_2:"Arquitectura de Sistemas", tag_3:"Modding de Juegos", tag_4:"Automatización",
+    scroll:"desplázate",
+    eyebrow_about:"acerca de",
+    about_title:"Descifrar las reglas. Reconstruirlas a mi manera.",
+    about_p1:"Rara vez me conformo con el software o un juego tal como se presenta. Prefiero desentrañar la lógica y las matemáticas que corren por debajo, para luego manipularlas, mejorarlas o transformarlas por completo.",
+    about_p2:"El pensamiento algorítmico y la resolución de problemas me llevan a un amplio abanico de trabajos: aplicaciones de escritorio, herramientas de red, automatización web, modificación de mecánicas dentro de juegos. Para mí, programar significa encontrar el punto flexible de un sistema y reescribirlo a mi manera.",
+    eyebrow_stack:"tecnologías",
+    stack_title:"El lenguaje adecuado para cada plataforma, siempre.",
+    stack_p:"Objetivos distintos requieren herramientas distintas. Cada una asociada a un tipo de problema.",
+    stack_1_label:"Sistemas y Rendimiento", stack_2_label:"Juegos y Scripting", stack_3_label:"Automatización y Datos", stack_4_label:"Web",
+    eyebrow_work:"capacidades",
+    work_title:"Tres ámbitos, un mismo enfoque: profundizar y reconstruir.",
+    cap1_title:"Desarrollo de Juegos e Ingeniería Inversa",
+    cap1_p:"En los juegos no soy solo un jugador: soy quien establece las reglas.",
+    cap1_li1:"<b>Manipulación de sistemas:</b> intervención en la gestión de memoria, monitoreo de procesos y renderizado de entidades para alterar mecánicas del juego.",
+    cap1_li2:"<b>Integración de motores:</b> sistemas de emparejamiento, lógica de UI/UX intrincada, economías internas y algoritmos de crafteo basados en probabilidad.",
+    cap1_li3:"<b>APIs de mods a medida:</b> capas personalizadas sobre la infraestructura existente del juego, reestructurando desde límites de inventario hasta interfaces.",
+    cap2_title:"Software de Escritorio y de Sistema",
+    cap2_p:"Un dominio profundo del funcionamiento interno de Windows me permite crear software independiente y de alto rendimiento.",
+    cap2_li1:"Bibliotecas multimedia nativas de Windows que potencian aplicaciones de estudio audiovisual profesionales con modo oscuro.",
+    cap2_li2:"Módulos de licenciamiento personalizados y herramientas de seguridad que rastrean procesos del sistema.",
+    cap2_li3:"Utilidades de red en Python (CustomTkinter) que monitorean el tráfico local e intervienen en el comportamiento de la caché ARP.",
+    cap3_title:"Automatización Web e IA",
+    cap3_p:"Tecnología web moderna, usada para construir herramientas que superan sus límites previstos.",
+    cap3_li1:"<b>Extensiones de navegador:</b> evasión de políticas de seguridad de contenido, conversión de una región de pantalla recortada a texto mediante OCR.",
+    cap3_li2:"<b>Automatización y scraping:</b> inyectores de botones DOM y payloads de API personalizados que envían medios web directo al gestor de descargas del navegador.",
+    cap3_li3:"<b>Paneles de IA:</b> interfaces receptivas con memoria persistente donde varios agentes de IA trabajan en paralelo para automatizar tareas como segmentación de código y edición de documentos.",
+    eyebrow_vision:"visión",
+    vision_quote:'Cuando un sistema dice <span>"imposible"</span>, eso solo significa que el algoritmo correcto aún no se ha escrito.',
+    vision_sign:"Como Emloxa, cada nuevo proyecto significa mirar detrás del firewall, reescribir el ADN del código y convertir los límites de la tecnología en mi propio terreno de juego.",
+    online:"en línea"
+  },
+  fr:{
+    loading:"initialisation", nav_about:"À propos", nav_stack:"Stack", nav_work:"Travail", nav_vision:"Vision",
+    hero_role:"ingénieur logiciel",
+    hero_title:'Comprendre le système,<br>puis réécrire <em>ses</em> règles.',
+    hero_sub:"Écrire du code n'est que la partie visible du travail. Ce qui me motive vraiment, c'est de disséquer la logique derrière un logiciel, un jeu ou un réseau, puis de le remodeler selon ma propre vision.",
+    tag_1:"Rétro-ingénierie", tag_2:"Architecture Systèmes", tag_3:"Modding de Jeux", tag_4:"Automatisation",
+    scroll:"défiler",
+    eyebrow_about:"à propos",
+    about_title:"Décoder les règles. Les reconstruire à ma façon.",
+    about_p1:"Je me contente rarement d'un logiciel ou d'un jeu tel qu'il est présenté. Je préfère décortiquer la logique et les mathématiques sous-jacentes, puis les manipuler, les améliorer ou les transformer entièrement.",
+    about_p2:"Ma pensée algorithmique et ma résolution de problèmes me portent vers un large éventail de travaux : applications de bureau, outils réseau, automatisation web, modification de mécaniques de jeu. Pour moi, coder signifie trouver où un système plie, et le réécrire selon mes propres termes.",
+    eyebrow_stack:"stack",
+    stack_title:"Le bon langage pour chaque plateforme, à chaque fois.",
+    stack_p:"Des objectifs différents appellent des outils différents. Chacun associé à une classe de problème.",
+    stack_1_label:"Systèmes &amp; Performance", stack_2_label:"Jeux &amp; Scripting", stack_3_label:"Automatisation &amp; Données", stack_4_label:"Web",
+    eyebrow_work:"compétences",
+    work_title:"Trois domaines, une seule approche : creuser, puis reconstruire.",
+    cap1_title:"Développement de Jeux &amp; Rétro-ingénierie",
+    cap1_p:"Dans les jeux, je ne suis pas qu'un joueur — je suis celui qui fixe les règles.",
+    cap1_li1:"<b>Manipulation de systèmes :</b> intervention sur la gestion de la mémoire, la surveillance des processus et le rendu des entités pour modifier les mécaniques du jeu.",
+    cap1_li2:"<b>Intégration moteur :</b> systèmes de matchmaking, logique UI/UX complexe, économies internes et algorithmes de crafting probabilistes.",
+    cap1_li3:"<b>APIs de mods sur mesure :</b> couches personnalisées au-dessus de l'infrastructure existante du jeu, restructurant tout, des limites d'inventaire aux interfaces.",
+    cap2_title:"Logiciels de Bureau &amp; Systèmes",
+    cap2_p:"Une maîtrise approfondie des rouages de Windows me permet de livrer des logiciels autonomes et performants.",
+    cap2_li1:"Bibliothèques multimédias natives Windows alimentant des applications de studio audiovisuel professionnelles en mode sombre.",
+    cap2_li2:"Modules de licence sur mesure et outils de sécurité qui suivent les processus système.",
+    cap2_li3:"Utilitaires réseau Python (CustomTkinter) surveillant le trafic local et intervenant sur le comportement du cache ARP.",
+    cap3_title:"Automatisation Web &amp; IA",
+    cap3_p:"Des technologies web modernes, utilisées pour construire des outils qui dépassent leurs limites prévues.",
+    cap3_li1:"<b>Extensions de navigateur :</b> contournement des politiques de sécurité de contenu, conversion d'une zone d'écran recadrée en texte via OCR.",
+    cap3_li2:"<b>Automatisation &amp; scraping :</b> injecteurs de boutons DOM et payloads API personnalisés acheminant les médias web directement vers le gestionnaire de téléchargement du navigateur.",
+    cap3_li3:"<b>Panneaux IA :</b> interfaces réactives à mémoire persistante où plusieurs agents IA travaillent en parallèle pour automatiser des tâches comme la segmentation de code et l'édition de documents.",
+    eyebrow_vision:"vision",
+    vision_quote:'Quand un système dit <span>« impossible »</span>, cela signifie simplement que le bon algorithme n\'a pas encore été écrit.',
+    vision_sign:"En tant qu'Emloxa, chaque nouveau projet consiste à regarder derrière le pare-feu, à réécrire l'ADN du code et à transformer les limites de la technologie en mon propre terrain de jeu.",
+    online:"en ligne"
+  },
+  de:{
+    loading:"initialisierung", nav_about:"Über mich", nav_stack:"Stack", nav_work:"Arbeit", nav_vision:"Vision",
+    hero_role:"Softwareentwickler",
+    hero_title:'Das System verstehen,<br>dann <em>seine</em> Regeln neu schreiben.',
+    hero_sub:"Code zu schreiben ist nur der sichtbare Teil der Arbeit. Was mich wirklich antreibt, ist die Logik hinter einer Software, einem Spiel oder einem Netzwerk zu zerlegen — und sie nach meinem eigenen Entwurf neu zu gestalten.",
+    tag_1:"Reverse Engineering", tag_2:"Systemarchitektur", tag_3:"Game Modding", tag_4:"Automatisierung",
+    scroll:"scrollen",
+    eyebrow_about:"über mich",
+    about_title:"Regeln entschlüsseln. Sie nach meinen Bedingungen neu aufbauen.",
+    about_p1:"Ich gebe mich selten mit Software oder einem Spiel zufrieden, so wie es präsentiert wird. Lieber entschlüssele ich die darunterliegende Mathematik und Logik — um sie dann zu manipulieren, zu verbessern oder komplett umzugestalten.",
+    about_p2:"Algorithmisches Denken und Problemlösung tragen mich durch ein breites Arbeitsspektrum: Desktop-Anwendungen, Netzwerk-Tools, Web-Automatisierung, Modifikation von Spielmechaniken. Für mich bedeutet Programmieren, herauszufinden, wo ein System nachgibt, und es nach meinen eigenen Regeln neu zu schreiben.",
+    eyebrow_stack:"stack",
+    stack_title:"Die richtige Sprache für jede Plattform, jedes Mal.",
+    stack_p:"Unterschiedliche Ziele erfordern unterschiedliche Werkzeuge. Jedes einer Problemklasse zugeordnet.",
+    stack_1_label:"Systeme &amp; Performance", stack_2_label:"Spiele &amp; Scripting", stack_3_label:"Automatisierung &amp; Daten", stack_4_label:"Web",
+    eyebrow_work:"fähigkeiten",
+    work_title:"Drei Bereiche, ein Ansatz: tief eintauchen, dann neu aufbauen.",
+    cap1_title:"Game-Entwicklung &amp; Reverse Engineering",
+    cap1_p:"In Spielen bin ich nicht nur Spieler — ich bestimme die Regeln.",
+    cap1_li1:"<b>Systemmanipulation:</b> Eingriffe in Speicherverwaltung, Prozessüberwachung und Entity-Rendering, um Spielmechaniken zu verändern.",
+    cap1_li2:"<b>Engine-Integration:</b> Matchmaking-Systeme, komplexe UI/UX-Logik, Ingame-Ökonomien und wahrscheinlichkeitsbasierte Crafting-Algorithmen.",
+    cap1_li3:"<b>Maßgeschneiderte Mod-APIs:</b> eigene Schichten über bestehender Spielinfrastruktur, die alles von Inventarlimits bis zu Interfaces neu strukturieren.",
+    cap2_title:"Desktop- &amp; Systemsoftware",
+    cap2_p:"Tiefes Verständnis der Windows-Interna erlaubt mir, eigenständige, hochperformante Software zu entwickeln.",
+    cap2_li1:"Native Windows-Multimedia-Bibliotheken, die professionelle Audio-Visual-Studio-Anwendungen im Dark Mode antreiben.",
+    cap2_li2:"Maßgeschneiderte Lizenzierungsmodule und Sicherheitstools, die Systemprozesse verfolgen.",
+    cap2_li3:"Python-Netzwerktools (CustomTkinter), die lokalen Traffic überwachen und in das ARP-Cache-Verhalten eingreifen.",
+    cap3_title:"Web- &amp; KI-Automatisierung",
+    cap3_p:"Moderne Webtechnologie, eingesetzt, um Tools zu bauen, die ihre vorgesehenen Grenzen sprengen.",
+    cap3_li1:"<b>Browser-Erweiterungen:</b> Umgehung von Content-Security-Policies, Umwandlung eines zugeschnittenen Bildschirmbereichs in Text per OCR.",
+    cap3_li2:"<b>Automatisierung &amp; Scraping:</b> DOM-Button-Injektoren und individuelle API-Payloads, die Web-Medien direkt in den Download-Manager des Browsers leiten.",
+    cap3_li3:"<b>KI-Panels:</b> speichergestützte, reaktionsfähige Oberflächen, in denen mehrere KI-Agenten parallel arbeiten, um Aufgaben wie Codesegmentierung und Dokumentbearbeitung zu automatisieren.",
+    eyebrow_vision:"vision",
+    vision_quote:'Wenn ein System <span>„unmöglich"</span> sagt, bedeutet das nur, dass der richtige Algorithmus noch nicht geschrieben wurde.',
+    vision_sign:"Als Emloxa bedeutet jedes neue Projekt, hinter die Firewall zu blicken, die DNA des Codes neu zu schreiben und die Grenzen der Technologie zu meinem eigenen Spielplatz zu machen.",
+    online:"online"
+  },
+  pt:{
+    loading:"inicializando", nav_about:"Sobre", nav_stack:"Stack", nav_work:"Trabalho", nav_vision:"Visão",
+    hero_role:"engenheiro de software",
+    hero_title:'Entender o sistema,<br>e depois reescrever <em>suas</em> regras.',
+    hero_sub:"Escrever código é só a parte visível do trabalho. O que realmente me move é dissecar a lógica por trás de um software, um jogo ou uma rede — e remodelá-la conforme meu próprio design.",
+    tag_1:"Engenharia Reversa", tag_2:"Arquitetura de Sistemas", tag_3:"Modding de Jogos", tag_4:"Automação",
+    scroll:"rolar",
+    eyebrow_about:"sobre",
+    about_title:"Decifrar as regras. Reconstruí-las do meu jeito.",
+    about_p1:"Raramente me contento com um software ou jogo como ele é apresentado. Prefiro desvendar a matemática e a lógica por baixo — para então manipulá-la, melhorá-la ou transformá-la em algo completamente diferente.",
+    about_p2:"O pensamento algorítmico e a resolução de problemas me levam por um amplo leque de trabalhos: aplicações desktop, ferramentas de rede, automação web, modificação de mecânicas dentro de jogos. Para mim, programar significa encontrar onde um sistema cede, e reescrevê-lo nos meus próprios termos.",
+    eyebrow_stack:"stack",
+    stack_title:"A linguagem certa para cada plataforma, sempre.",
+    stack_p:"Objetivos diferentes exigem ferramentas diferentes. Cada uma associada a uma classe de problema.",
+    stack_1_label:"Sistemas &amp; Performance", stack_2_label:"Jogos &amp; Scripting", stack_3_label:"Automação &amp; Dados", stack_4_label:"Web",
+    eyebrow_work:"capacidades",
+    work_title:"Três domínios, uma abordagem: aprofundar e reconstruir.",
+    cap1_title:"Desenvolvimento de Jogos &amp; Engenharia Reversa",
+    cap1_p:"Nos jogos, não sou apenas jogador — sou quem define as regras.",
+    cap1_li1:"<b>Manipulação de sistemas:</b> intervenção em gerenciamento de memória, monitoramento de processos e renderização de entidades para alterar mecânicas do jogo.",
+    cap1_li2:"<b>Integração de engine:</b> sistemas de matchmaking, lógica de UI/UX intrincada, economias internas e algoritmos de crafting baseados em probabilidade.",
+    cap1_li3:"<b>APIs de mods personalizadas:</b> camadas sob medida sobre a infraestrutura existente do jogo, reestruturando tudo, de limites de inventário a interfaces.",
+    cap2_title:"Software de Desktop &amp; Sistema",
+    cap2_p:"Domínio profundo dos internos do Windows me permite lançar software independente e de alto desempenho.",
+    cap2_li1:"Bibliotecas multimídia nativas do Windows potencializando aplicações profissionais de estúdio audiovisual com modo escuro.",
+    cap2_li2:"Módulos de licenciamento personalizados e ferramentas de segurança que rastreiam processos do sistema.",
+    cap2_li3:"Utilitários de rede em Python (CustomTkinter) que monitoram tráfego local e intervêm no comportamento do cache ARP.",
+    cap3_title:"Automação Web &amp; IA",
+    cap3_p:"Tecnologia web moderna, usada para construir ferramentas que superam seus limites originais.",
+    cap3_li1:"<b>Extensões de navegador:</b> contornando políticas de segurança de conteúdo, convertendo uma região de tela recortada em texto via OCR.",
+    cap3_li2:"<b>Automação &amp; scraping:</b> injetores de botões DOM e payloads de API personalizados que enviam mídia da web direto ao gerenciador de downloads do navegador.",
+    cap3_li3:"<b>Painéis de IA:</b> interfaces responsivas com memória persistente onde vários agentes de IA trabalham em paralelo para automatizar tarefas como segmentação de código e edição de documentos.",
+    eyebrow_vision:"visão",
+    vision_quote:'Quando um sistema diz <span>"impossível"</span>, isso só significa que o algoritmo certo ainda não foi escrito.',
+    vision_sign:"Como Emloxa, cada novo projeto significa olhar por trás do firewall, reescrever o DNA do código e transformar os limites da tecnologia no meu próprio playground.",
+    online:"online"
+  },
+  it:{
+    loading:"inizializzazione", nav_about:"Chi sono", nav_stack:"Stack", nav_work:"Lavoro", nav_vision:"Visione",
+    hero_role:"ingegnere del software",
+    hero_title:'Capire il sistema,<br>poi riscriverne <em>le</em> regole.',
+    hero_sub:"Scrivere codice è solo la parte visibile del lavoro. Ciò che mi guida davvero è sezionare la logica dietro un software, un gioco o una rete — per poi rimodellarla secondo il mio disegno.",
+    tag_1:"Reverse Engineering", tag_2:"Architettura dei Sistemi", tag_3:"Game Modding", tag_4:"Automazione",
+    scroll:"scorri",
+    eyebrow_about:"chi sono",
+    about_title:"Decifrare le regole. Ricostruirle a modo mio.",
+    about_p1:"Raramente mi accontento di un software o un gioco così come viene presentato. Preferisco svelare la matematica e la logica sottostanti, per poi manipolarle, migliorarle o trasformarle del tutto.",
+    about_p2:"Il pensiero algoritmico e la risoluzione dei problemi mi portano in un ampio ventaglio di lavori: applicazioni desktop, strumenti di rete, automazione web, modifica di meccaniche di gioco. Per me, programmare significa trovare dove un sistema cede, e riscriverlo alle mie condizioni.",
+    eyebrow_stack:"stack",
+    stack_title:"Il linguaggio giusto per ogni piattaforma, ogni volta.",
+    stack_p:"Obiettivi diversi richiedono strumenti diversi. Ognuno associato a una classe di problema.",
+    stack_1_label:"Sistemi &amp; Performance", stack_2_label:"Giochi &amp; Scripting", stack_3_label:"Automazione &amp; Dati", stack_4_label:"Web",
+    eyebrow_work:"competenze",
+    work_title:"Tre ambiti, un solo approccio: approfondire, poi ricostruire.",
+    cap1_title:"Sviluppo Giochi &amp; Reverse Engineering",
+    cap1_p:"Nei giochi non sono solo un giocatore — sono io a stabilire le regole.",
+    cap1_li1:"<b>Manipolazione di sistema:</b> intervento su gestione della memoria, monitoraggio dei processi e rendering delle entità per alterare le meccaniche di gioco.",
+    cap1_li2:"<b>Integrazione del motore:</b> sistemi di matchmaking, logica UI/UX complessa, economie di gioco e algoritmi di crafting basati sulla probabilità.",
+    cap1_li3:"<b>API di mod personalizzate:</b> livelli su misura sopra l'infrastruttura di gioco esistente, ristrutturando tutto, dai limiti d'inventario alle interfacce.",
+    cap2_title:"Software Desktop &amp; di Sistema",
+    cap2_p:"Una profonda padronanza degli interni di Windows mi permette di realizzare software autonomo e ad alte prestazioni.",
+    cap2_li1:"Librerie multimediali native di Windows che alimentano applicazioni professionali da studio audiovisivo in dark mode.",
+    cap2_li2:"Moduli di licenza personalizzati e strumenti di sicurezza che tracciano i processi di sistema.",
+    cap2_li3:"Utility di rete in Python (CustomTkinter) che monitorano il traffico locale e intervengono sul comportamento della cache ARP.",
+    cap3_title:"Automazione Web &amp; IA",
+    cap3_p:"Tecnologia web moderna, usata per costruire strumenti che superano i loro limiti previsti.",
+    cap3_li1:"<b>Estensioni browser:</b> aggirare le content security policy, convertire una regione di schermo ritagliata in testo tramite OCR.",
+    cap3_li2:"<b>Automazione &amp; scraping:</b> iniettori di pulsanti DOM e payload API personalizzati che instradano i contenuti web direttamente nel gestore download del browser.",
+    cap3_li3:"<b>Pannelli IA:</b> interfacce reattive con memoria persistente dove più agenti IA lavorano in parallelo per automatizzare compiti come la segmentazione del codice e l'editing dei documenti.",
+    eyebrow_vision:"visione",
+    vision_quote:'Quando un sistema dice <span>"impossibile"</span>, significa solo che l\'algoritmo giusto non è ancora stato scritto.',
+    vision_sign:"Come Emloxa, ogni nuovo progetto significa guardare dietro il firewall, riscrivere il DNA del codice e trasformare i confini della tecnologia nel mio personale campo di gioco.",
+    online:"online"
+  },
+  ru:{
+    loading:"инициализация", nav_about:"Обо мне", nav_stack:"Стек", nav_work:"Работа", nav_vision:"Видение",
+    hero_role:"инженер-программист",
+    hero_title:'Понять систему,<br>а затем переписать <em>её</em> правила.',
+    hero_sub:"Написание кода — лишь видимая часть работы. Меня по-настоящему увлекает разбор логики, скрытой внутри программы, игры или сети, а затем её переработка по собственному замыслу.",
+    tag_1:"Реверс-инжиниринг", tag_2:"Архитектура систем", tag_3:"Моддинг игр", tag_4:"Автоматизация",
+    scroll:"прокрутить",
+    eyebrow_about:"обо мне",
+    about_title:"Расшифровать правила. Перестроить их по-своему.",
+    about_p1:"Я редко довольствуюсь программой или игрой в том виде, в котором она представлена. Предпочитаю разобрать лежащую в основе математику и логику — а затем манипулировать ею, улучшать её или полностью переработать.",
+    about_p2:"Алгоритмическое мышление и решение задач ведут меня через широкий спектр работ: настольные приложения, сетевые инструменты, веб-автоматизация, модификация игровой механики. Для меня программирование — это поиск того, где система поддаётся, и переписывание её на собственных условиях.",
+    eyebrow_stack:"стек",
+    stack_title:"Правильный язык для платформы — каждый раз.",
+    stack_p:"Разные цели требуют разных инструментов. Каждый привязан к своему классу задач.",
+    stack_1_label:"Системы и производительность", stack_2_label:"Игры и скриптинг", stack_3_label:"Автоматизация и данные", stack_4_label:"Веб",
+    eyebrow_work:"возможности",
+    work_title:"Три направления, один подход: копнуть глубже, затем перестроить.",
+    cap1_title:"Разработка игр и реверс-инжиниринг",
+    cap1_p:"В играх я не просто игрок — я устанавливаю правила.",
+    cap1_li1:"<b>Манипуляция системой:</b> вмешательство в управление памятью, мониторинг процессов и рендеринг сущностей для изменения игровой механики.",
+    cap1_li2:"<b>Интеграция с движком:</b> системы подбора игроков, сложная UI/UX-логика, внутриигровая экономика и алгоритмы крафта на основе вероятностей.",
+    cap1_li3:"<b>Кастомные mod API:</b> написание собственных слоёв поверх существующей инфраструктуры игры, перестраивающих всё — от лимитов инвентаря до интерфейсов.",
+    cap2_title:"Настольное и системное ПО",
+    cap2_p:"Глубокое понимание внутреннего устройства Windows позволяет создавать автономное, высокопроизводительное ПО.",
+    cap2_li1:"Нативные мультимедийные библиотеки Windows, лежащие в основе профессиональных аудиовизуальных студийных приложений с тёмной темой.",
+    cap2_li2:"Кастомные модули лицензирования и инструменты безопасности, отслеживающие системные процессы.",
+    cap2_li3:"Сетевые утилиты на Python (CustomTkinter), отслеживающие локальный трафик и вмешивающиеся в поведение ARP-кэша.",
+    cap3_title:"Веб- и ИИ-автоматизация",
+    cap3_p:"Современные веб-технологии, используемые для создания инструментов, выходящих за рамки заложенных ограничений.",
+    cap3_li1:"<b>Расширения браузера:</b> обход политик безопасности контента, преобразование выделенной области экрана в текст через OCR.",
+    cap3_li2:"<b>Автоматизация и скрейпинг:</b> инжекторы DOM-кнопок и кастомные API-payload'ы, направляющие веб-медиа напрямую в менеджер загрузок браузера.",
+    cap3_li3:"<b>ИИ-панели:</b> отзывчивые интерфейсы с постоянной памятью, где несколько ИИ-агентов работают параллельно, автоматизируя такие задачи, как сегментация кода и редактирование документов.",
+    eyebrow_vision:"видение",
+    vision_quote:'Когда система говорит <span>«невозможно»</span>, это лишь значит, что нужный алгоритм ещё не написан.',
+    vision_sign:"Как Emloxa, каждый новый проект означает заглянуть за файрвол, переписать ДНК кода и превратить границы технологий в собственную игровую площадку.",
+    online:"онлайн"
+  },
+  ar:{
+    loading:"جارٍ التهيئة", nav_about:"نبذة", nav_stack:"التقنيات", nav_work:"الأعمال", nav_vision:"الرؤية",
+    hero_role:"مهندس برمجيات",
+    hero_title:'فهم النظام،<br>ثم إعادة كتابة <em>قواعده</em>.',
+    hero_sub:"كتابة الكود هي فقط الجزء الظاهر من العمل. ما يحفزني حقًا هو تفكيك المنطق الكامن خلف برنامج أو لعبة أو شبكة، ثم إعادة تشكيله وفق رؤيتي الخاصة.",
+    tag_1:"الهندسة العكسية", tag_2:"معمارية الأنظمة", tag_3:"تعديل الألعاب", tag_4:"الأتمتة",
+    scroll:"مرر للأسفل",
+    eyebrow_about:"نبذة عني",
+    about_title:"فك شيفرة القواعد. إعادة بنائها بشروطي الخاصة.",
+    about_p1:"نادرًا ما أكتفي ببرنامج أو لعبة كما هي معروضة. أفضّل تفكيك الرياضيات والمنطق الذي يعمل تحتها، ثم التلاعب بها أو تحسينها أو تحويلها إلى شيء مختلف تمامًا.",
+    about_p2:"التفكير الخوارزمي وحل المشكلات يقودانني عبر نطاق واسع من الأعمال: تطبيقات سطح المكتب، أدوات الشبكات، أتمتة الويب، تعديل آليات الألعاب. بالنسبة لي، البرمجة تعني إيجاد النقطة التي ينثني عندها النظام، وإعادة كتابته بشروطي.",
+    eyebrow_stack:"التقنيات",
+    stack_title:"اللغة المناسبة للمنصة، في كل مرة.",
+    stack_p:"الأهداف المختلفة تتطلب أدوات مختلفة. كل واحدة مرتبطة بفئة من المشكلات.",
+    stack_1_label:"الأنظمة والأداء", stack_2_label:"الألعاب والبرمجة النصية", stack_3_label:"الأتمتة والبيانات", stack_4_label:"الويب",
+    eyebrow_work:"القدرات",
+    work_title:"ثلاثة مجالات، نهج واحد: التعمق ثم إعادة البناء.",
+    cap1_title:"تطوير الألعاب والهندسة العكسية",
+    cap1_p:"في الألعاب، لست مجرد لاعب — أنا من يضع القواعد.",
+    cap1_li1:"<b>التلاعب بالنظام:</b> التدخل في إدارة الذاكرة ومراقبة العمليات وسلوك عرض الكيانات لتغيير آليات اللعبة.",
+    cap1_li2:"<b>دمج المحرك:</b> أنظمة المطابقة، منطق واجهة المستخدم المعقد، اقتصاديات داخل اللعبة، وخوارزميات صناعة تعتمد على الاحتمالات.",
+    cap1_li3:"<b>واجهات برمجة تعديل مخصصة:</b> كتابة طبقات خاصة فوق البنية التحتية الحالية للعبة، لإعادة هيكلة كل شيء من حدود المخزون إلى الواجهات.",
+    cap2_title:"برمجيات سطح المكتب والأنظمة",
+    cap2_p:"إتقان عميق لداخليات ويندوز يتيح لي تطوير برمجيات مستقلة وعالية الأداء.",
+    cap2_li1:"مكتبات الوسائط المتعددة الأصلية لويندوز التي تشغّل تطبيقات استوديو سمعي بصري احترافية بالوضع الداكن.",
+    cap2_li2:"وحدات ترخيص مخصصة وأدوات أمنية تتعقب عمليات النظام.",
+    cap2_li3:"أدوات شبكة بلغة بايثون (CustomTkinter) تراقب حركة الشبكة المحلية وتتدخل في سلوك ذاكرة ARP المؤقتة.",
+    cap3_title:"أتمتة الويب والذكاء الاصطناعي",
+    cap3_p:"تقنيات ويب حديثة، تُستخدم لبناء أدوات تتجاوز حدودها المقصودة.",
+    cap3_li1:"<b>إضافات المتصفح:</b> تجاوز سياسات أمان المحتوى، وتحويل منطقة شاشة مقصوصة إلى نص عبر التعرف الضوئي على الحروف.",
+    cap3_li2:"<b>الأتمتة والاستخراج:</b> حاقنات أزرار DOM وحمولات API مخصصة توجّه وسائط الويب مباشرة إلى مدير التنزيلات في المتصفح.",
+    cap3_li3:"<b>لوحات الذكاء الاصطناعي:</b> واجهات تفاعلية مزودة بذاكرة يعمل فيها عدة وكلاء ذكاء اصطناعي بالتوازي لأتمتة مهام مثل تجزئة الكود وتحرير المستندات.",
+    eyebrow_vision:"الرؤية",
+    vision_quote:'عندما يقول نظام ما إن الأمر <span>"مستحيل"</span>، فهذا يعني فقط أن الخوارزمية الصحيحة لم تُكتب بعد.',
+    vision_sign:"بصفتي Emloxa، كل مشروع جديد يعني النظر خلف جدار الحماية، وإعادة كتابة الحمض النووي للكود، وتحويل حدود التكنولوجيا إلى ملعبي الخاص.",
+    online:"متصل"
+  },
+  zh:{
+    loading:"初始化中", nav_about:"关于", nav_stack:"技术栈", nav_work:"能力", nav_vision:"愿景",
+    hero_role:"软件工程师",
+    hero_title:'理解系统，<br>然后重写<em>它的</em>规则。',
+    hero_sub:"编写代码只是工作中可见的部分。真正驱动我的，是剖析一款软件、一个游戏或一个网络背后的逻辑——然后按照我自己的设计重新塑造它。",
+    tag_1:"逆向工程", tag_2:"系统架构", tag_3:"游戏模组", tag_4:"自动化",
+    scroll:"向下滚动",
+    eyebrow_about:"关于我",
+    about_title:"解构规则，按我的方式重建它们。",
+    about_p1:"我很少满足于软件或游戏本身所呈现的样子。我更愿意拆解其底层运行的数学和逻辑——然后操控它、改进它，或将其彻底转变为别的东西。",
+    about_p2:"算法思维和问题解决能力让我涉猎广泛：桌面应用程序、网络工具、网页自动化、游戏内机制修改。对我来说，编程意味着找到系统的可塑之处，并按照自己的方式重写它。",
+    eyebrow_stack:"技术栈",
+    stack_title:"为每个平台选择合适的语言。",
+    stack_p:"不同的目标需要不同的工具，每一种都对应一类问题。",
+    stack_1_label:"系统与性能", stack_2_label:"游戏与脚本", stack_3_label:"自动化与数据", stack_4_label:"网页",
+    eyebrow_work:"能力",
+    work_title:"三个领域，一个方法：深入钻研，然后重建。",
+    cap1_title:"游戏开发与逆向工程",
+    cap1_p:"在游戏中，我不只是玩家——我是制定规则的人。",
+    cap1_li1:"<b>系统操控：</b>介入内存管理、进程监控和实体渲染行为，以改变游戏内机制。",
+    cap1_li2:"<b>引擎集成：</b>匹配系统、复杂的UI/UX逻辑、游戏内经济系统以及基于概率的合成算法。",
+    cap1_li3:"<b>自定义模组API：</b>在现有游戏基础架构上编写定制层，重构从库存上限到界面的一切。",
+    cap2_title:"桌面与系统软件",
+    cap2_p:"对Windows内部机制的深入掌握让我能够开发独立的高性能软件。",
+    cap2_li1:"原生Windows多媒体库，驱动支持深色模式的专业视听工作室应用程序。",
+    cap2_li2:"追踪系统进程的自定义授权模块和安全工具。",
+    cap2_li3:"基于Python（CustomTkinter）的网络工具，监控本地流量并介入ARP缓存行为。",
+    cap3_title:"网页与AI自动化",
+    cap3_p:"运用现代网页技术，构建超越其预设边界的工具。",
+    cap3_li1:"<b>浏览器扩展：</b>绕过内容安全策略，通过OCR将截取的屏幕区域转换为文本。",
+    cap3_li2:"<b>自动化与抓取：</b>DOM按钮注入器和自定义API负载，将网页媒体直接传送到浏览器的下载管理器。",
+    cap3_li3:"<b>AI面板：</b>具备记忆功能的响应式界面，多个AI代理并行工作，自动完成代码分段和文档编辑等任务。",
+    eyebrow_vision:"愿景",
+    vision_quote:'当一个系统说<span>"不可能"</span>时，那只是意味着正确的算法尚未被写出来。',
+    vision_sign:"作为Emloxa，每一个新项目都意味着窥探防火墙背后，重写代码的DNA，将技术的边界变成我自己的游乐场。",
+    online:"在线"
+  },
+  ja:{
+    loading:"初期化中", nav_about:"概要", nav_stack:"技術スタック", nav_work:"実績", nav_vision:"ビジョン",
+    hero_role:"ソフトウェアエンジニア",
+    hero_title:'システムを理解し、<br>その<em>ルール</em>を書き換える。',
+    hero_sub:"コードを書くことは、仕事の目に見える部分に過ぎません。私を本当に突き動かすのは、ソフトウェアやゲーム、ネットワークの裏にあるロジックを解剖し、自分自身の設計に合わせて作り変えることです。",
+    tag_1:"リバースエンジニアリング", tag_2:"システムアーキテクチャ", tag_3:"ゲームMOD開発", tag_4:"自動化",
+    scroll:"スクロール",
+    eyebrow_about:"プロフィール",
+    about_title:"ルールを解読し、自分の流儀で再構築する。",
+    about_p1:"提示されたままのソフトウェアやゲームで満足することは滅多にありません。その裏側で動く数学とロジックを解き明かし、操作し、改良し、あるいはまったく別のものへと作り変えることを好みます。",
+    about_p2:"アルゴリズム的思考と問題解決力によって、デスクトップアプリケーション、ネットワークツール、Web自動化、ゲーム内メカニクスの改変など、幅広い分野で活動しています。私にとってコーディングとは、システムがどこで屈するかを見つけ出し、自分のルールで書き換えることです。",
+    eyebrow_stack:"技術スタック",
+    stack_title:"プラットフォームごとに最適な言語を選ぶ。",
+    stack_p:"目的が違えば必要なツールも違います。それぞれが特定の課題領域に対応しています。",
+    stack_1_label:"システム＆パフォーマンス", stack_2_label:"ゲーム＆スクリプティング", stack_3_label:"自動化＆データ", stack_4_label:"Web",
+    eyebrow_work:"できること",
+    work_title:"3つの領域、1つのアプローチ：深く掘り下げ、作り直す。",
+    cap1_title:"ゲーム開発＆リバースエンジニアリング",
+    cap1_p:"ゲームの世界では、私は単なるプレイヤーではなく、ルールを決める側です。",
+    cap1_li1:"<b>システム操作：</b>メモリ管理、プロセス監視、エンティティ描画の挙動に介入し、ゲーム内メカニクスを変更。",
+    cap1_li2:"<b>エンジン統合：</b>マッチメイキングシステム、複雑なUI/UXロジック、ゲーム内経済、確率ベースのクラフトアルゴリズム。",
+    cap1_li3:"<b>カスタムMOD API：</b>既存のゲーム基盤の上に独自レイヤーを構築し、インベントリ上限からインターフェースまで再構成。",
+    cap2_title:"デスクトップ＆システムソフトウェア",
+    cap2_p:"Windows内部への深い理解により、独立した高性能ソフトウェアを開発できます。",
+    cap2_li1:"ネイティブWindowsマルチメディアライブラリを活用した、ダークモード対応のプロフェッショナルな音声・映像スタジオアプリケーション。",
+    cap2_li2:"システムプロセスを追跡するカスタムライセンスモジュールとセキュリティツール。",
+    cap2_li3:"ローカルトラフィックを監視し、ARPキャッシュの挙動に介入するPython（CustomTkinter）製ネットワークユーティリティ。",
+    cap3_title:"Web＆AI自動化",
+    cap3_p:"モダンなWeb技術を用いて、想定された限界を超えるツールを構築。",
+    cap3_li1:"<b>ブラウザ拡張機能：</b>コンテンツセキュリティポリシーを回避し、切り取った画面領域をOCRでテキスト化。",
+    cap3_li2:"<b>自動化＆スクレイピング：</b>DOMボタンインジェクターとカスタムAPIペイロードにより、Webメディアをブラウザのダウンロードマネージャーへ直接送信。",
+    cap3_li3:"<b>AIパネル：</b>複数のAIエージェントが並行して動作し、コード分割やドキュメント編集などのタスクを自動化する、メモリ機能付きレスポンシブインターフェース。",
+    eyebrow_vision:"ビジョン",
+    vision_quote:'システムが<span>「不可能」</span>と言うとき、それは正しいアルゴリズムがまだ書かれていないだけのことです。',
+    vision_sign:"Emloxaとして、新しいプロジェクトのたびにファイアウォールの裏側を覗き、コードのDNAを書き換え、テクノロジーの限界を自分自身の遊び場に変えています。",
+    online:"オンライン"
+  },
+  ko:{
+    loading:"초기화 중", nav_about:"소개", nav_stack:"기술 스택", nav_work:"작업", nav_vision:"비전",
+    hero_role:"소프트웨어 엔지니어",
+    hero_title:'시스템을 이해하고,<br>그<em> 규칙</em>을 다시 쓴다.',
+    hero_sub:"코드를 작성하는 것은 작업의 눈에 보이는 부분일 뿐입니다. 저를 진정으로 움직이게 하는 것은 소프트웨어, 게임, 네트워크 이면의 로직을 파헤치고 제 방식대로 재구성하는 것입니다.",
+    tag_1:"리버스 엔지니어링", tag_2:"시스템 아키텍처", tag_3:"게임 모딩", tag_4:"자동화",
+    scroll:"스크롤",
+    eyebrow_about:"소개",
+    about_title:"규칙을 해독하고, 제 방식대로 재구성합니다.",
+    about_p1:"저는 소프트웨어나 게임을 제공된 그대로 받아들이는 경우가 드뭅니다. 그 아래에서 작동하는 수학과 로직을 파헤친 다음, 조작하고 개선하거나 완전히 다른 것으로 바꾸는 것을 선호합니다.",
+    about_p2:"알고리즘적 사고와 문제 해결 능력은 데스크톱 애플리케이션, 네트워크 도구, 웹 자동화, 게임 내 메커닉 수정에 이르는 폭넓은 작업으로 저를 이끕니다. 저에게 코딩이란 시스템이 어디에서 유연해지는지 찾아내고, 제 방식대로 다시 쓰는 것을 의미합니다.",
+    eyebrow_stack:"기술 스택",
+    stack_title:"플랫폼에 맞는 정확한 언어, 매번.",
+    stack_p:"목표가 다르면 도구도 달라집니다. 각각은 특정 문제 유형에 매핑됩니다.",
+    stack_1_label:"시스템 &amp; 성능", stack_2_label:"게임 &amp; 스크립팅", stack_3_label:"자동화 &amp; 데이터", stack_4_label:"웹",
+    eyebrow_work:"역량",
+    work_title:"세 가지 영역, 하나의 접근법: 깊이 파고들고 재구성한다.",
+    cap1_title:"게임 개발 &amp; 리버스 엔지니어링",
+    cap1_p:"게임에서 저는 단순한 플레이어가 아니라 규칙을 정하는 사람입니다.",
+    cap1_li1:"<b>시스템 조작:</b> 메모리 관리, 프로세스 모니터링, 엔티티 렌더링 동작에 개입하여 게임 내 메커닉 변경.",
+    cap1_li2:"<b>엔진 통합:</b> 매치메이킹 시스템, 정교한 UI/UX 로직, 게임 내 경제, 확률 기반 제작 알고리즘.",
+    cap1_li3:"<b>맞춤형 모드 API:</b> 기존 게임 인프라 위에 자체 레이어를 작성하여 인벤토리 한도부터 인터페이스까지 모든 것을 재구성.",
+    cap2_title:"데스크톱 &amp; 시스템 소프트웨어",
+    cap2_p:"Windows 내부 구조에 대한 깊은 이해로 독립적이고 고성능인 소프트웨어를 제작합니다.",
+    cap2_li1:"다크 모드를 지원하는 전문 오디오-비주얼 스튜디오 애플리케이션을 구동하는 네이티브 Windows 멀티미디어 라이브러리.",
+    cap2_li2:"시스템 프로세스를 추적하는 맞춤형 라이선싱 모듈 및 보안 도구.",
+    cap2_li3:"로컬 트래픽을 모니터링하고 ARP 캐시 동작에 개입하는 Python(CustomTkinter) 네트워크 유틸리티.",
+    cap3_title:"웹 &amp; AI 자동화",
+    cap3_p:"의도된 한계를 뛰어넘는 도구를 만들기 위해 사용하는 최신 웹 기술.",
+    cap3_li1:"<b>브라우저 확장 프로그램:</b> 콘텐츠 보안 정책 우회, 잘라낸 화면 영역을 OCR로 텍스트 변환.",
+    cap3_li2:"<b>자동화 &amp; 스크래핑:</b> 웹 미디어를 브라우저의 다운로드 관리자로 직접 전달하는 DOM 버튼 인젝터 및 맞춤형 API 페이로드.",
+    cap3_li3:"<b>AI 패널:</b> 여러 AI 에이전트가 병렬로 작동하여 코드 분할 및 문서 편집과 같은 작업을 자동화하는 메모리 기반 반응형 인터페이스.",
+    eyebrow_vision:"비전",
+    vision_quote:'시스템이 <span>"불가능하다"</span>고 말할 때, 그것은 단지 올바른 알고리즘이 아직 작성되지 않았다는 의미일 뿐입니다.',
+    vision_sign:"Emloxa로서 모든 새 프로젝트는 방화벽 뒤를 들여다보고, 코드의 DNA를 다시 쓰고, 기술의 경계를 저만의 놀이터로 바꾸는 것을 의미합니다.",
+    online:"온라인"
+  },
+  hi:{
+    loading:"आरंभ हो रहा है", nav_about:"परिचय", nav_stack:"स्टैक", nav_work:"कार्य", nav_vision:"विज़न",
+    hero_role:"सॉफ़्टवेयर इंजीनियर",
+    hero_title:'सिस्टम को समझना,<br>फिर <em>उसके</em> नियमों को फिर से लिखना।',
+    hero_sub:"कोड लिखना काम का केवल दिखने वाला हिस्सा है। मुझे वास्तव में जो प्रेरित करता है वह है किसी सॉफ़्टवेयर, गेम या नेटवर्क के पीछे के तर्क को समझना — और फिर उसे अपने डिज़ाइन के अनुसार नया रूप देना।",
+    tag_1:"रिवर्स इंजीनियरिंग", tag_2:"सिस्टम आर्किटेक्चर", tag_3:"गेम मॉडिंग", tag_4:"ऑटोमेशन",
+    scroll:"स्क्रॉल करें",
+    eyebrow_about:"परिचय",
+    about_title:"नियमों को समझना। उन्हें अपनी शर्तों पर फिर से बनाना।",
+    about_p1:"मैं शायद ही कभी किसी सॉफ़्टवेयर या गेम को जैसा प्रस्तुत किया गया है वैसे ही स्वीकार करता हूँ। मैं इसके नीचे चल रहे गणित और तर्क को समझना पसंद करता हूँ — फिर उसमें बदलाव करना, उसे बेहतर बनाना, या उसे पूरी तरह से कुछ और बना देना।",
+    about_p2:"एल्गोरिदमिक सोच और समस्या-समाधान मुझे व्यापक कार्यों में ले जाते हैं: डेस्कटॉप एप्लिकेशन, नेटवर्क टूल्स, वेब ऑटोमेशन, गेम-मैकेनिक संशोधन। मेरे लिए, कोडिंग का मतलब है यह पता लगाना कि सिस्टम कहाँ लचीला है, और उसे अपनी शर्तों पर फिर से लिखना।",
+    eyebrow_stack:"स्टैक",
+    stack_title:"हर बार प्लेटफ़ॉर्म के लिए सही भाषा।",
+    stack_p:"अलग-अलग लक्ष्यों के लिए अलग-अलग उपकरण चाहिए। हर एक किसी समस्या-वर्ग से जुड़ा है।",
+    stack_1_label:"सिस्टम और प्रदर्शन", stack_2_label:"गेम और स्क्रिप्टिंग", stack_3_label:"ऑटोमेशन और डेटा", stack_4_label:"वेब",
+    eyebrow_work:"क्षमताएं",
+    work_title:"तीन क्षेत्र, एक दृष्टिकोण: गहराई से जाना, फिर पुनर्निर्माण करना।",
+    cap1_title:"गेम डेवलपमेंट और रिवर्स इंजीनियरिंग",
+    cap1_p:"गेम्स में, मैं केवल एक खिलाड़ी नहीं हूँ — मैं वह हूँ जो नियम तय करता है।",
+    cap1_li1:"<b>सिस्टम मैनिपुलेशन:</b> गेम-मैकेनिक बदलने के लिए मेमोरी प्रबंधन, प्रक्रिया निगरानी और एंटिटी-रेंडरिंग व्यवहार में हस्तक्षेप।",
+    cap1_li2:"<b>इंजन इंटीग्रेशन:</b> मैचमेकिंग सिस्टम, जटिल UI/UX लॉजिक, गेम-अर्थव्यवस्थाएं, और प्रायिकता-आधारित क्राफ्टिंग एल्गोरिदम।",
+    cap1_li3:"<b>कस्टम मॉड API:</b> मौजूदा गेम इंफ्रास्ट्रक्चर के ऊपर विशेष परतें लिखना, इन्वेंट्री सीमाओं से लेकर इंटरफेस तक सब कुछ पुनर्गठित करना।",
+    cap2_title:"डेस्कटॉप और सिस्टम सॉफ़्टवेयर",
+    cap2_p:"Windows की आंतरिक संरचना पर गहरी पकड़ मुझे स्वतंत्र, उच्च-प्रदर्शन सॉफ़्टवेयर बनाने में सक्षम बनाती है।",
+    cap2_li1:"डार्क मोड समर्थित, पेशेवर ऑडियो-विज़ुअल स्टूडियो एप्लिकेशन को शक्ति देने वाली नेटिव Windows मल्टीमीडिया लाइब्रेरी।",
+    cap2_li2:"सिस्टम प्रक्रियाओं को ट्रैक करने वाले कस्टम लाइसेंसिंग मॉड्यूल और सुरक्षा उपकरण।",
+    cap2_li3:"स्थानीय ट्रैफ़िक की निगरानी करने वाले और ARP कैश व्यवहार में हस्तक्षेप करने वाले Python (CustomTkinter) नेटवर्क यूटिलिटी।",
+    cap3_title:"वेब और AI ऑटोमेशन",
+    cap3_p:"आधुनिक वेब तकनीक, ऐसे उपकरण बनाने के लिए उपयोग की जाती है जो अपनी तय सीमाओं को पार करते हैं।",
+    cap3_li1:"<b>ब्राउज़र एक्सटेंशन:</b> कंटेंट सिक्योरिटी पॉलिसी को बायपास करना, क्रॉप की गई स्क्रीन क्षेत्र को OCR के ज़रिए टेक्स्ट में बदलना।",
+    cap3_li2:"<b>ऑटोमेशन और स्क्रैपिंग:</b> DOM बटन इंजेक्टर और कस्टम API पेलोड जो वेब मीडिया को सीधे ब्राउज़र के डाउनलोड मैनेजर में भेजते हैं।",
+    cap3_li3:"<b>AI पैनल:</b> मेमोरी-समर्थित, रिस्पॉन्सिव इंटरफेस जहाँ कई AI एजेंट समानांतर रूप से काम करते हुए कोड सेगमेंटेशन और दस्तावेज़ संपादन जैसे कार्यों को स्वचालित करते हैं।",
+    eyebrow_vision:"विज़न",
+    vision_quote:'जब कोई सिस्टम <span>"असंभव"</span> कहता है, तो इसका मतलब बस इतना है कि सही एल्गोरिदम अभी तक लिखा नहीं गया है।',
+    vision_sign:"Emloxa के रूप में, हर नया प्रोजेक्ट फ़ायरवॉल के पीछे झांकने, कोड के DNA को फिर से लिखने, और तकनीक की सीमाओं को अपने खुद के खेल के मैदान में बदलने के बारे में है।",
+    online:"ऑनलाइन"
+  },
+  nl:{
+    loading:"initialiseren", nav_about:"Over", nav_stack:"Stack", nav_work:"Werk", nav_vision:"Visie",
+    hero_role:"software-engineer",
+    hero_title:'Het systeem begrijpen,<br>en dan <em>zijn</em> regels herschrijven.',
+    hero_sub:"Code schrijven is slechts het zichtbare deel van het werk. Wat me echt drijft, is het ontleden van de logica achter software, een spel of een netwerk — en die vervolgens naar mijn eigen ontwerp vormgeven.",
+    tag_1:"Reverse Engineering", tag_2:"Systeemarchitectuur", tag_3:"Game Modding", tag_4:"Automatisering",
+    scroll:"scroll",
+    eyebrow_about:"over mij",
+    about_title:"De regels ontcijferen. Ze op mijn eigen voorwaarden herbouwen.",
+    about_p1:"Ik neem zelden genoegen met software of een spel zoals het wordt gepresenteerd. Ik ontrafel liever de onderliggende wiskunde en logica — om die vervolgens te manipuleren, te verbeteren of volledig om te vormen.",
+    about_p2:"Algoritmisch denken en probleemoplossing brengen me langs een breed scala aan werk: desktopapplicaties, netwerktools, webautomatisering, aanpassing van spelmechanica. Voor mij betekent coderen: ontdekken waar een systeem meebuigt, en het herschrijven op mijn eigen voorwaarden.",
+    eyebrow_stack:"stack",
+    stack_title:"Elke keer de juiste taal voor het platform.",
+    stack_p:"Verschillende doelen vragen om verschillende tools. Elk gekoppeld aan een probleemtype.",
+    stack_1_label:"Systemen &amp; Prestaties", stack_2_label:"Games &amp; Scripting", stack_3_label:"Automatisering &amp; Data", stack_4_label:"Web",
+    eyebrow_work:"vaardigheden",
+    work_title:"Drie domeinen, één aanpak: diep graven, dan herbouwen.",
+    cap1_title:"Game Development &amp; Reverse Engineering",
+    cap1_p:"In games ben ik niet alleen speler — ik bepaal de regels.",
+    cap1_li1:"<b>Systeemmanipulatie:</b> ingrijpen in geheugenbeheer, procesmonitoring en entity-rendering om spelmechanica te veranderen.",
+    cap1_li2:"<b>Engine-integratie:</b> matchmaking-systemen, complexe UI/UX-logica, in-game economieën en kans-gebaseerde crafting-algoritmen.",
+    cap1_li3:"<b>Aangepaste mod-API's:</b> op maat gemaakte lagen bovenop bestaande game-infrastructuur, die alles herstructureren van inventarislimieten tot interfaces.",
+    cap2_title:"Desktop- &amp; Systeemsoftware",
+    cap2_p:"Diepgaande kennis van Windows-interne werking stelt me in staat zelfstandige, krachtige software te bouwen.",
+    cap2_li1:"Native Windows-multimediabibliotheken die professionele audiovisuele studiotoepassingen met dark mode aandrijven.",
+    cap2_li2:"Aangepaste licentiemodules en beveiligingstools die systeemprocessen volgen.",
+    cap2_li3:"Python (CustomTkinter) netwerktools die lokaal verkeer monitoren en ingrijpen in ARP-cachegedrag.",
+    cap3_title:"Web- &amp; AI-automatisering",
+    cap3_p:"Moderne webtechnologie, gebruikt om tools te bouwen die hun bedoelde grenzen overstijgen.",
+    cap3_li1:"<b>Browserextensies:</b> omzeilen van content security policies, een uitgesneden schermgedeelte omzetten naar tekst via OCR.",
+    cap3_li2:"<b>Automatisering &amp; scraping:</b> DOM-knopinjectors en aangepaste API-payloads die webmedia rechtstreeks naar de downloadmanager van de browser sturen.",
+    cap3_li3:"<b>AI-panelen:</b> responsieve interfaces met persistent geheugen waarin meerdere AI-agents parallel werken om taken zoals codesegmentatie en documentbewerking te automatiseren.",
+    eyebrow_vision:"visie",
+    vision_quote:'Als een systeem <span>"onmogelijk"</span> zegt, betekent dat alleen dat het juiste algoritme nog niet is geschreven.',
+    vision_sign:"Als Emloxa betekent elk nieuw project achter de firewall kijken, het DNA van de code herschrijven, en de grenzen van technologie omvormen tot mijn eigen speelplaats.",
+    online:"online"
+  },
+  pl:{
+    loading:"inicjalizacja", nav_about:"O mnie", nav_stack:"Stack", nav_work:"Praca", nav_vision:"Wizja",
+    hero_role:"inżynier oprogramowania",
+    hero_title:'Zrozumieć system,<br>a potem przepisać <em>jego</em> zasady.',
+    hero_sub:"Pisanie kodu to tylko widoczna część pracy. To, co naprawdę mnie napędza, to rozkładanie na czynniki pierwsze logiki stojącej za oprogramowaniem, grą czy siecią — a następnie przekształcanie jej według własnej wizji.",
+    tag_1:"Inżynieria wsteczna", tag_2:"Architektura systemów", tag_3:"Modding gier", tag_4:"Automatyzacja",
+    scroll:"przewiń",
+    eyebrow_about:"o mnie",
+    about_title:"Rozszyfrować zasady. Odbudować je na własnych warunkach.",
+    about_p1:"Rzadko zadowalam się oprogramowaniem czy grą w takiej formie, w jakiej zostały przedstawione. Wolę rozłożyć na czynniki pierwsze matematykę i logikę działającą pod spodem — a następnie nią manipulować, ulepszać ją lub całkowicie przekształcić w coś innego.",
+    about_p2:"Myślenie algorytmiczne i rozwiązywanie problemów prowadzą mnie przez szeroki zakres prac: aplikacje desktopowe, narzędzia sieciowe, automatyzację webową, modyfikację mechanik w grach. Dla mnie programowanie oznacza znalezienie miejsca, w którym system daje się ugiąć, i przepisanie go na własnych zasadach.",
+    eyebrow_stack:"stack",
+    stack_title:"Właściwy język dla platformy, za każdym razem.",
+    stack_p:"Różne cele wymagają różnych narzędzi. Każde przypisane do konkretnej klasy problemów.",
+    stack_1_label:"Systemy i wydajność", stack_2_label:"Gry i skrypty", stack_3_label:"Automatyzacja i dane", stack_4_label:"Web",
+    eyebrow_work:"umiejętności",
+    work_title:"Trzy obszary, jedno podejście: zagłębić się, a potem odbudować.",
+    cap1_title:"Tworzenie gier i inżynieria wsteczna",
+    cap1_p:"W grach nie jestem tylko graczem — jestem tym, kto ustala zasady.",
+    cap1_li1:"<b>Manipulacja systemem:</b> ingerencja w zarządzanie pamięcią, monitorowanie procesów i renderowanie encji w celu zmiany mechanik gry.",
+    cap1_li2:"<b>Integracja z silnikiem:</b> systemy dobierania graczy, złożona logika UI/UX, ekonomie w grze i algorytmy craftingu oparte na prawdopodobieństwie.",
+    cap1_li3:"<b>Niestandardowe API modów:</b> pisanie własnych warstw na istniejącej infrastrukturze gry, przebudowujących wszystko od limitów ekwipunku po interfejsy.",
+    cap2_title:"Oprogramowanie desktopowe i systemowe",
+    cap2_p:"Dogłębna znajomość wewnętrznych mechanizmów Windows pozwala mi tworzyć samodzielne, wydajne oprogramowanie.",
+    cap2_li1:"Natywne biblioteki multimedialne Windows napędzające profesjonalne aplikacje studia audiowizualnego z trybem ciemnym.",
+    cap2_li2:"Niestandardowe moduły licencyjne i narzędzia bezpieczeństwa śledzące procesy systemowe.",
+    cap2_li3:"Narzędzia sieciowe w Pythonie (CustomTkinter) monitorujące ruch lokalny i ingerujące w zachowanie pamięci podręcznej ARP.",
+    cap3_title:"Automatyzacja Web i AI",
+    cap3_p:"Nowoczesne technologie webowe wykorzystywane do budowania narzędzi wykraczających poza ich zamierzone granice.",
+    cap3_li1:"<b>Rozszerzenia przeglądarki:</b> omijanie polityk bezpieczeństwa treści, konwersja wyciętego fragmentu ekranu na tekst za pomocą OCR.",
+    cap3_li2:"<b>Automatyzacja i scraping:</b> iniektory przycisków DOM i niestandardowe payloady API kierujące media z sieci bezpośrednio do menedżera pobierania przeglądarki.",
+    cap3_li3:"<b>Panele AI:</b> responsywne interfejsy z pamięcią trwałą, w których wiele agentów AI pracuje równolegle, automatyzując zadania takie jak segmentacja kodu i edycja dokumentów.",
+    eyebrow_vision:"wizja",
+    vision_quote:'Gdy system mówi <span>„niemożliwe"</span>, oznacza to tylko, że właściwy algorytm nie został jeszcze napisany.',
+    vision_sign:"Jako Emloxa, każdy nowy projekt oznacza spojrzenie za zaporę sieciową, przepisanie DNA kodu i zamienienie granic technologii we własne boisko.",
+    online:"online"
+  },
+  id:{
+    loading:"menginisialisasi", nav_about:"Tentang", nav_stack:"Stack", nav_work:"Karya", nav_vision:"Visi",
+    hero_role:"insinyur perangkat lunak",
+    hero_title:'Memahami sistem,<br>lalu menulis ulang <em>aturannya</em>.',
+    hero_sub:"Menulis kode hanyalah bagian yang terlihat dari pekerjaan ini. Yang benar-benar mendorong saya adalah membedah logika di balik sebuah perangkat lunak, game, atau jaringan — lalu membentuknya kembali sesuai rancangan saya sendiri.",
+    tag_1:"Reverse Engineering", tag_2:"Arsitektur Sistem", tag_3:"Modding Game", tag_4:"Otomasi",
+    scroll:"gulir",
+    eyebrow_about:"tentang",
+    about_title:"Memecahkan aturan. Membangunnya kembali dengan cara saya sendiri.",
+    about_p1:"Saya jarang puas dengan perangkat lunak atau game apa adanya. Saya lebih suka membongkar matematika dan logika yang berjalan di baliknya — lalu memanipulasinya, meningkatkannya, atau mengubahnya menjadi sesuatu yang sama sekali berbeda.",
+    about_p2:"Pemikiran algoritmik dan pemecahan masalah membawa saya ke berbagai jenis pekerjaan: aplikasi desktop, alat jaringan, otomasi web, modifikasi mekanik dalam game. Bagi saya, coding berarti menemukan di mana sebuah sistem bisa ditekuk, dan menulis ulang sesuai aturan saya sendiri.",
+    eyebrow_stack:"stack",
+    stack_title:"Bahasa yang tepat untuk setiap platform, setiap saat.",
+    stack_p:"Tujuan yang berbeda membutuhkan alat yang berbeda. Masing-masing dipetakan ke satu jenis masalah.",
+    stack_1_label:"Sistem &amp; Performa", stack_2_label:"Game &amp; Scripting", stack_3_label:"Otomasi &amp; Data", stack_4_label:"Web",
+    eyebrow_work:"kemampuan",
+    work_title:"Tiga bidang, satu pendekatan: menggali dalam, lalu membangun kembali.",
+    cap1_title:"Pengembangan Game &amp; Reverse Engineering",
+    cap1_p:"Dalam game, saya bukan sekadar pemain — sayalah yang menentukan aturannya.",
+    cap1_li1:"<b>Manipulasi sistem:</b> mengintervensi manajemen memori, pemantauan proses, dan perilaku rendering entitas untuk mengubah mekanik dalam game.",
+    cap1_li2:"<b>Integrasi engine:</b> sistem matchmaking, logika UI/UX yang rumit, ekonomi dalam game, dan algoritma crafting berbasis probabilitas.",
+    cap1_li3:"<b>API mod khusus:</b> menulis lapisan khusus di atas infrastruktur game yang ada, merestrukturisasi segalanya mulai dari batas inventaris hingga antarmuka.",
+    cap2_title:"Perangkat Lunak Desktop &amp; Sistem",
+    cap2_p:"Penguasaan mendalam terhadap internal Windows memungkinkan saya membangun perangkat lunak mandiri berperforma tinggi.",
+    cap2_li1:"Pustaka multimedia native Windows yang menggerakkan aplikasi studio audio-visual profesional dengan mode gelap.",
+    cap2_li2:"Modul lisensi khusus dan alat keamanan yang melacak proses sistem.",
+    cap2_li3:"Utilitas jaringan Python (CustomTkinter) yang memantau lalu lintas lokal dan mengintervensi perilaku cache ARP.",
+    cap3_title:"Otomasi Web &amp; AI",
+    cap3_p:"Teknologi web modern, digunakan untuk membangun alat yang melampaui batas yang dimaksudkan.",
+    cap3_li1:"<b>Ekstensi browser:</b> melewati kebijakan keamanan konten, mengonversi area layar yang dipotong menjadi teks melalui OCR.",
+    cap3_li2:"<b>Otomasi &amp; scraping:</b> injektor tombol DOM dan payload API khusus yang mengarahkan media web langsung ke pengelola unduhan browser.",
+    cap3_li3:"<b>Panel AI:</b> antarmuka responsif dengan memori persisten di mana beberapa agen AI bekerja secara paralel untuk mengotomasi tugas seperti segmentasi kode dan pengeditan dokumen.",
+    eyebrow_vision:"visi",
+    vision_quote:'Ketika sebuah sistem berkata <span>"tidak mungkin,"</span> itu hanya berarti algoritma yang tepat belum ditulis.',
+    vision_sign:"Sebagai Emloxa, setiap proyek baru berarti mengintip di balik firewall, menulis ulang DNA kode, dan mengubah batas-batas teknologi menjadi taman bermain saya sendiri.",
+    online:"online"
+  }
+};
 
-        scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x050608, 0.0016);
+/* =====================================================================
+   LANGUAGE ENGINE
+   ===================================================================== */
+const COUNTRY_TO_LANG = {
+  TR:'tr', US:'en', GB:'en', AU:'en', CA:'en', IE:'en', NZ:'en',
+  ES:'es', MX:'es', AR:'es', CO:'es', CL:'es', PE:'es', VE:'es',
+  FR:'fr', BE:'fr', CH:'fr',
+  DE:'de', AT:'de',
+  PT:'pt', BR:'pt',
+  IT:'it',
+  RU:'ru', BY:'ru', KZ:'ru',
+  SA:'ar', AE:'ar', EG:'ar', QA:'ar', KW:'ar', MA:'ar', DZ:'ar', IQ:'ar', JO:'ar',
+  CN:'zh', TW:'zh', HK:'zh', SG:'zh',
+  JP:'ja',
+  KR:'ko',
+  IN:'hi',
+  NL:'nl',
+  PL:'pl',
+  ID:'id'
+};
 
-        camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 3000);
-        camera.position.z = 700;
+function applyLang(lang){
+  if(!T[lang]) lang = 'en';
+  const dict = T[lang];
+  document.documentElement.lang = lang;
+  document.documentElement.setAttribute('data-lang', lang);
+  document.body.dir = LANGS[lang].dir;
 
-        const COUNT = window.innerWidth < 640 ? 140 : 260;
-        const positions = new Float32Array(COUNT * 3);
-        const speeds = [];
-        for(let i=0;i<COUNT;i++){
-          positions[i*3]   = (Math.random()-0.5) * 1800;
-          positions[i*3+1] = (Math.random()-0.5) * 1200;
-          positions[i*3+2] = (Math.random()-0.5) * 1200;
-          speeds.push({
-            dx:(Math.random()-0.5)*0.15,
-            dy:(Math.random()-0.5)*0.15,
-            dz:(Math.random()-0.5)*0.15
-          });
-        }
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if(dict[key] !== undefined) el.textContent = dict[key];
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const key = el.getAttribute('data-i18n-html');
+    if(dict[key] !== undefined) el.innerHTML = dict[key];
+  });
 
-        const geo = new THREE.BufferGeometry();
-        geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  document.getElementById('langFlagPerch').textContent = LANGS[lang].flag;
+  document.getElementById('langCodePerch').textContent = lang.toUpperCase();
 
-        const sprite = makeGlowTexture();
-        const mat = new THREE.PointsMaterial({
-          size: 5.5,
-          map: sprite,
-          transparent: true,
-          opacity: 0.85,
-          color: 0x9db4ff,
-          blending: THREE.AdditiveBlending,
-          depthWrite:false
-        });
+  document.querySelectorAll('.lang-option').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
 
-        particles = new THREE.Points(geo, mat);
-        particles.userData.speeds = speeds;
-        scene.add(particles);
+  localStorage.setItem('emloxa_lang', lang);
+}
 
-        // connecting line network
-        const lineMat = new THREE.LineBasicMaterial({
-          color: 0x5b6fae,
-          transparent:true,
-          opacity:0.12,
-          blending: THREE.AdditiveBlending
-        });
-        const lineGeo = new THREE.BufferGeometry();
-        lines = new THREE.LineSegments(lineGeo, lineMat);
-        scene.add(lines);
+function buildLangMenu(){
+  const menu = document.getElementById('langMenu');
+  menu.innerHTML = '';
+  Object.keys(LANGS).forEach(code => {
+    const l = LANGS[code];
+    const btn = document.createElement('button');
+    btn.className = 'lang-option';
+    btn.dataset.lang = code;
+    btn.setAttribute('role','option');
+    btn.innerHTML = `<span class="flag">${l.flag}</span><span class="native">${l.native}</span>
+      <svg class="check" viewBox="0 0 16 16" fill="none" style="display:none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    btn.addEventListener('click', () => {
+      applyLang(code);
+      closeLangMenu();
+    });
+    menu.appendChild(btn);
+  });
+}
 
-        window.addEventListener('resize', onResize, { passive:true });
-        window.addEventListener('mousemove', onMouseMove, { passive:true });
-        window.addEventListener('touchmove', onTouchMove, { passive:true });
+function openLangMenu(){ document.getElementById('langSwitch').classList.add('open'); document.getElementById('langBtn').setAttribute('aria-expanded','true'); }
+function closeLangMenu(){ document.getElementById('langSwitch').classList.remove('open'); document.getElementById('langBtn').setAttribute('aria-expanded','false'); }
 
-        animate();
-      }catch(e){
-        // WebGL unavailable — leave canvas as transparent static background, no error shown
-        canvas.style.display = 'none';
+document.getElementById('langBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const sw = document.getElementById('langSwitch');
+  sw.classList.contains('open') ? closeLangMenu() : openLangMenu();
+});
+document.addEventListener('click', closeLangMenu);
+
+buildLangMenu();
+
+/* Detect language: saved choice > browser language > IP geolocation > English */
+(function detectLang(){
+  const saved = localStorage.getItem('emloxa_lang');
+  if(saved && T[saved]){
+    applyLang(saved);
+    return;
+  }
+
+  const browserLang = (navigator.language || 'en').slice(0,2).toLowerCase();
+  if(T[browserLang]){
+    applyLang(browserLang);
+  } else {
+    applyLang('en');
+  }
+
+  // refine using IP geolocation (best-effort, silently falls back)
+  fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(3500) })
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if(!data || !data.country_code) return;
+      if(localStorage.getItem('emloxa_lang_manual')) return; // don't override manual choice made meanwhile
+      const mapped = COUNTRY_TO_LANG[data.country_code];
+      if(mapped && T[mapped] && !localStorage.getItem('emloxa_lang')){
+        applyLang(mapped);
       }
-    }
+    })
+    .catch(() => { /* geolocation unavailable — keep browser-language guess, no error shown */ });
+})();
 
-    function makeGlowTexture(){
-      const c = document.createElement('canvas');
-      c.width = c.height = 64;
-      const ctx = c.getContext('2d');
-      const g = ctx.createRadialGradient(32,32,0,32,32,32);
-      g.addColorStop(0, 'rgba(255,255,255,1)');
-      g.addColorStop(0.35, 'rgba(180,200,255,0.6)');
-      g.addColorStop(1, 'rgba(180,200,255,0)');
-      ctx.fillStyle = g;
-      ctx.fillRect(0,0,64,64);
-      return new THREE.CanvasTexture(c);
-    }
+// mark manual selection so geo-detection doesn't override a user's explicit pick mid-flight
+document.getElementById('langMenu').addEventListener('click', () => {
+  localStorage.setItem('emloxa_lang_manual', '1');
+});
 
-    function onResize(){
-      camera.aspect = window.innerWidth/window.innerHeight;
-      camera.updateProjectionMatrix();
+/* =====================================================================
+   BACKGROUND — particle network + aurora
+   ===================================================================== */
+(function(){
+  const canvas = document.getElementById('bg-canvas');
+  let renderer, scene, camera, particles, lines, raf;
+  let mouseX = 0, mouseY = 0, targetRotX = 0, targetRotY = 0;
+  const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function init(){
+    try{
+      renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(window.innerWidth, window.innerHeight);
-    }
 
-    function onMouseMove(e){
-      mouseX = (e.clientX / window.innerWidth - 0.5);
-      mouseY = (e.clientY / window.innerHeight - 0.5);
-    }
-    function onTouchMove(e){
-      if(!e.touches || !e.touches[0]) return;
-      mouseX = (e.touches[0].clientX / window.innerWidth - 0.5);
-      mouseY = (e.touches[0].clientY / window.innerHeight - 0.5);
-    }
+      scene = new THREE.Scene();
+      scene.fog = new THREE.FogExp2(0x050608, 0.0014);
 
-    const LINK_DIST = 165;
+      camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 3000);
+      camera.position.z = 700;
 
-    function updateLines(positions, count){
-      const linePositions = [];
-      for(let i=0;i<count;i++){
-        for(let j=i+1;j<count;j++){
-          const dx = positions[i*3]-positions[j*3];
-          const dy = positions[i*3+1]-positions[j*3+1];
-          const dz = positions[i*3+2]-positions[j*3+2];
-          const distSq = dx*dx+dy*dy+dz*dz;
-          if(distSq < LINK_DIST*LINK_DIST){
-            linePositions.push(positions[i*3],positions[i*3+1],positions[i*3+2]);
-            linePositions.push(positions[j*3],positions[j*3+1],positions[j*3+2]);
-          }
-        }
-      }
-      lines.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(linePositions), 3));
-    }
-
-    let frame = 0;
-    function animate(){
-      raf = requestAnimationFrame(animate);
-      frame++;
-
-      const pos = particles.geometry.attributes.position.array;
-      const speeds = particles.userData.speeds;
-      const count = speeds.length;
-
-      for(let i=0;i<count;i++){
-        pos[i*3]   += speeds[i].dx;
-        pos[i*3+1] += speeds[i].dy;
-        pos[i*3+2] += speeds[i].dz;
-
-        if(pos[i*3] > 900 || pos[i*3] < -900) speeds[i].dx *= -1;
-        if(pos[i*3+1] > 600 || pos[i*3+1] < -600) speeds[i].dy *= -1;
-        if(pos[i*3+2] > 600 || pos[i*3+2] < -600) speeds[i].dz *= -1;
-      }
-      particles.geometry.attributes.position.needsUpdate = true;
-
-      // recompute connective lines every few frames for performance
-      if(frame % 3 === 0){
-        updateLines(pos, count);
+      const COUNT = window.innerWidth < 640 ? 160 : 320;
+      const positions = new Float32Array(COUNT * 3);
+      const speeds = [];
+      for(let i=0;i<COUNT;i++){
+        positions[i*3]   = (Math.random()-0.5) * 1900;
+        positions[i*3+1] = (Math.random()-0.5) * 1300;
+        positions[i*3+2] = (Math.random()-0.5) * 1300;
+        speeds.push({
+          dx:(Math.random()-0.5)*0.18,
+          dy:(Math.random()-0.5)*0.18,
+          dz:(Math.random()-0.5)*0.18,
+          phase: Math.random()*Math.PI*2
+        });
       }
 
-      targetRotX += (mouseY*0.25 - targetRotX) * 0.02;
-      targetRotY += (mouseX*0.35 - targetRotY) * 0.02;
-      scene.rotation.x = targetRotX;
-      scene.rotation.y = targetRotY;
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
-      particles.rotation.y += 0.00035;
-      lines.rotation.y += 0.00035;
+      const sprite = makeGlowTexture();
+      const mat = new THREE.PointsMaterial({
+        size: 6,
+        map: sprite,
+        transparent: true,
+        opacity: 0.9,
+        color: 0x9db4ff,
+        blending: THREE.AdditiveBlending,
+        depthWrite:false
+      });
 
-      renderer.render(scene, camera);
-    }
+      particles = new THREE.Points(geo, mat);
+      particles.userData.speeds = speeds;
+      scene.add(particles);
 
-    if(!isReducedMotion && window.WebGLRenderingContext){
-      init();
-    }else{
+      const lineMat = new THREE.LineBasicMaterial({
+        color: 0x6f7fc9,
+        transparent:true,
+        opacity:0.14,
+        blending: THREE.AdditiveBlending
+      });
+      const lineGeo = new THREE.BufferGeometry();
+      lines = new THREE.LineSegments(lineGeo, lineMat);
+      scene.add(lines);
+
+      window.addEventListener('resize', onResize, { passive:true });
+      window.addEventListener('mousemove', onMouseMove, { passive:true });
+      window.addEventListener('touchmove', onTouchMove, { passive:true });
+
+      animate();
+    }catch(e){
       canvas.style.display = 'none';
     }
-  })();
+  }
 
-  /* ---------- 3D tilt on hero heading ---------- */
-  (function(){
-    const hero3d = document.getElementById('hero3d');
-    const isTouch = window.matchMedia('(pointer: coarse)').matches;
-    if(isTouch || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  function makeGlowTexture(){
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const ctx = c.getContext('2d');
+    const g = ctx.createRadialGradient(32,32,0,32,32,32);
+    g.addColorStop(0, 'rgba(255,255,255,1)');
+    g.addColorStop(0.35, 'rgba(180,200,255,0.65)');
+    g.addColorStop(1, 'rgba(180,200,255,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,64,64);
+    return new THREE.CanvasTexture(c);
+  }
 
-    let curX = 0, curY = 0, tX = 0, tY = 0;
+  function onResize(){
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  }
 
-    window.addEventListener('mousemove', (e) => {
-      const nx = (e.clientX / window.innerWidth - 0.5);
-      const ny = (e.clientY / window.innerHeight - 0.5);
-      tX = ny * -10;
-      tY = nx * 14;
-    }, { passive:true });
+  function onMouseMove(e){
+    mouseX = (e.clientX / window.innerWidth - 0.5);
+    mouseY = (e.clientY / window.innerHeight - 0.5);
+  }
+  function onTouchMove(e){
+    if(!e.touches || !e.touches[0]) return;
+    mouseX = (e.touches[0].clientX / window.innerWidth - 0.5);
+    mouseY = (e.touches[0].clientY / window.innerHeight - 0.5);
+  }
 
-    function loop(){
-      curX += (tX - curX) * 0.06;
-      curY += (tY - curY) * 0.06;
-      hero3d.style.transform = `rotateX(${curX}deg) rotateY(${curY}deg)`;
-      requestAnimationFrame(loop);
+  const LINK_DIST = 175;
+
+  function updateLines(positions, count){
+    const linePositions = [];
+    for(let i=0;i<count;i++){
+      for(let j=i+1;j<count;j++){
+        const dx = positions[i*3]-positions[j*3];
+        const dy = positions[i*3+1]-positions[j*3+1];
+        const dz = positions[i*3+2]-positions[j*3+2];
+        const distSq = dx*dx+dy*dy+dz*dz;
+        if(distSq < LINK_DIST*LINK_DIST){
+          linePositions.push(positions[i*3],positions[i*3+1],positions[i*3+2]);
+          linePositions.push(positions[j*3],positions[j*3+1],positions[j*3+2]);
+        }
+      }
     }
-    loop();
-  })();
+    lines.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(linePositions), 3));
+  }
 
-  /* ---------- topbar reveal ---------- */
-  const topbar = document.getElementById('topbar');
-  window.addEventListener('scroll', () => {
-    topbar.classList.toggle('visible', window.scrollY > window.innerHeight * 0.6);
+  let frame = 0;
+  const clock = { t: 0 };
+  function animate(){
+    raf = requestAnimationFrame(animate);
+    frame++;
+    clock.t += 0.01;
+
+    const pos = particles.geometry.attributes.position.array;
+    const speeds = particles.userData.speeds;
+    const count = speeds.length;
+
+    for(let i=0;i<count;i++){
+      pos[i*3]   += speeds[i].dx + Math.sin(clock.t + speeds[i].phase) * 0.04;
+      pos[i*3+1] += speeds[i].dy + Math.cos(clock.t + speeds[i].phase) * 0.04;
+      pos[i*3+2] += speeds[i].dz;
+
+      if(pos[i*3] > 950 || pos[i*3] < -950) speeds[i].dx *= -1;
+      if(pos[i*3+1] > 650 || pos[i*3+1] < -650) speeds[i].dy *= -1;
+      if(pos[i*3+2] > 650 || pos[i*3+2] < -650) speeds[i].dz *= -1;
+    }
+    particles.geometry.attributes.position.needsUpdate = true;
+
+    if(frame % 3 === 0){
+      updateLines(pos, count);
+    }
+
+    targetRotX += (mouseY*0.28 - targetRotX) * 0.02;
+    targetRotY += (mouseX*0.38 - targetRotY) * 0.02;
+    scene.rotation.x = targetRotX;
+    scene.rotation.y = targetRotY;
+
+    particles.rotation.y += 0.0004;
+    lines.rotation.y += 0.0004;
+
+    renderer.render(scene, camera);
+  }
+
+  if(!isReducedMotion && window.WebGLRenderingContext){
+    init();
+  }else{
+    canvas.style.display = 'none';
+  }
+})();
+
+/* ---------- 3D tilt on hero heading ---------- */
+(function(){
+  const hero3d = document.getElementById('hero3d');
+  const isTouch = window.matchMedia('(pointer: coarse)').matches;
+  if(isTouch || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  let curX = 0, curY = 0, tX = 0, tY = 0;
+
+  window.addEventListener('mousemove', (e) => {
+    const nx = (e.clientX / window.innerWidth - 0.5);
+    const ny = (e.clientY / window.innerHeight - 0.5);
+    tX = ny * -10;
+    tY = nx * 14;
   }, { passive:true });
 
-  /* ---------- background audio (autoplay, user can mute) ---------- */
-  const bgm = document.getElementById('bgm');
-  const soundBtn = document.getElementById('sound-toggle');
-  let audioFailed = false;
-  let userMuted = false;
-
-  bgm.addEventListener('error', () => {
-    audioFailed = true;
-    soundBtn.style.display = 'none';
-  });
-
-  function setPlayingUI(isPlaying){
-    soundBtn.classList.toggle('playing', isPlaying);
-    soundBtn.setAttribute('aria-pressed', String(isPlaying));
+  function loop(){
+    curX += (tX - curX) * 0.06;
+    curY += (tY - curY) * 0.06;
+    hero3d.style.transform = `rotateX(${curX}deg) rotateY(${curY}deg)`;
+    requestAnimationFrame(loop);
   }
+  loop();
+})();
 
-  function tryAutoplay(){
-    if (audioFailed || userMuted) return;
-    bgm.volume = 0.32;
-    bgm.play().then(() => setPlayingUI(true)).catch(() => {
-      // browser blocked autoplay — start on first user interaction instead
-      const resume = () => {
-        if (audioFailed || userMuted) return;
-        bgm.play().then(() => setPlayingUI(true)).catch(() => {});
-        window.removeEventListener('pointerdown', resume);
-        window.removeEventListener('keydown', resume);
-        window.removeEventListener('touchstart', resume);
-        window.removeEventListener('wheel', resume);
-      };
-      window.addEventListener('pointerdown', resume, { once:true });
-      window.addEventListener('keydown', resume, { once:true });
-      window.addEventListener('touchstart', resume, { once:true });
-      window.addEventListener('wheel', resume, { once:true });
-    });
-  }
-
-  soundBtn.addEventListener('click', () => {
-    if (audioFailed) return;
-    if (bgm.paused){
-      userMuted = false;
-      bgm.volume = 0.32;
-      bgm.play().then(() => setPlayingUI(true)).catch(() => {});
-    } else {
-      userMuted = true;
-      bgm.pause();
-      setPlayingUI(false);
-    }
-  });
-
-  tryAutoplay();
-
-  /* ---------- smooth in-page nav ---------- */
-  document.querySelectorAll('a[href^="#"]').forEach(a => {
-    a.addEventListener('click', (e) => {
-      const target = document.querySelector(a.getAttribute('href'));
-      if (target){
-        e.preventDefault();
-        target.scrollIntoView({ behavior:'smooth', block:'start' });
+/* ---------- scroll reveal ---------- */
+(function(){
+  const els = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        entry.target.classList.add('in-view');
+        io.unobserve(entry.target);
       }
     });
-  });
+  }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
+  els.forEach(el => io.observe(el));
+})();
 
-  /* ---------- loading veil ---------- */
-  window.addEventListener('load', () => {
-    setTimeout(() => {
-      document.getElementById('veil').classList.add('hidden');
-    }, 400);
+/* ---------- topbar reveal ---------- */
+const topbar = document.getElementById('topbar');
+const langPerch = document.getElementById('langPerch');
+window.addEventListener('scroll', () => {
+  const past = window.scrollY > window.innerHeight * 0.6;
+  topbar.classList.toggle('visible', past);
+  langPerch.classList.toggle('hide-perch', past);
+}, { passive:true });
+
+/* ---------- background audio (autoplay, user can mute) ---------- */
+const bgm = document.getElementById('bgm');
+const soundBtn = document.getElementById('sound-toggle');
+let audioFailed = false;
+let userMuted = false;
+
+bgm.addEventListener('error', () => {
+  audioFailed = true;
+  soundBtn.style.display = 'none';
+});
+
+function setPlayingUI(isPlaying){
+  soundBtn.classList.toggle('playing', isPlaying);
+  soundBtn.setAttribute('aria-pressed', String(isPlaying));
+}
+
+function tryAutoplay(){
+  if (audioFailed || userMuted) return;
+  bgm.volume = 0.32;
+  bgm.play().then(() => setPlayingUI(true)).catch(() => {
+    const resume = () => {
+      if (audioFailed || userMuted) return;
+      bgm.play().then(() => setPlayingUI(true)).catch(() => {});
+      window.removeEventListener('pointerdown', resume);
+      window.removeEventListener('keydown', resume);
+      window.removeEventListener('touchstart', resume);
+      window.removeEventListener('wheel', resume);
+    };
+    window.addEventListener('pointerdown', resume, { once:true });
+    window.addEventListener('keydown', resume, { once:true });
+    window.addEventListener('touchstart', resume, { once:true });
+    window.addEventListener('wheel', resume, { once:true });
   });
+}
+
+soundBtn.addEventListener('click', () => {
+  if (audioFailed) return;
+  if (bgm.paused){
+    userMuted = false;
+    bgm.volume = 0.32;
+    bgm.play().then(() => setPlayingUI(true)).catch(() => {});
+  } else {
+    userMuted = true;
+    bgm.pause();
+    setPlayingUI(false);
+  }
+});
+
+tryAutoplay();
+
+/* ---------- smooth in-page nav ---------- */
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', (e) => {
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target){
+      e.preventDefault();
+      target.scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+  });
+});
+
+/* ---------- loading veil ---------- */
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('veil').classList.add('hidden');
+  }, 400);
+});
 </script>
 
 </body>
